@@ -1,25 +1,24 @@
 package com.chekurda.main_screen.presentation.device_list
 
-import android.util.Log
 import android.view.ViewGroup
-import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.RecyclerView
-import com.chekurda.main_screen.presentation.device_list.DeviceView.DeviceData
+import com.chekurda.common.base_list.calculateDiff
+import com.chekurda.main_screen.data.DeviceInfo
+import com.chekurda.main_screen.presentation.device_list.holder.DeviceViewHolder
 
 internal class DeviceListAdapter(
     private val holderActionListener: DeviceViewHolder.ActionListener
 ) : RecyclerView.Adapter<DeviceViewHolder>() {
 
-    private var deviceList: List<DeviceData> = emptyList()
+    private var deviceList: List<DeviceInfo> = emptyList()
 
     override fun onAttachedToRecyclerView(recyclerView: RecyclerView) {
         super.onAttachedToRecyclerView(recyclerView)
         recyclerView.recycledViewPool.setMaxRecycledViews(DEVICE_VIEW_HOLDER_TYPE, 200)
     }
 
-    fun setDataList(dataList: List<DeviceData>) {
-        Log.e("TAGTAG", "setDataList $dataList")
-        val diffResult = DiffUtil.calculateDiff(DeviceListDiffUtilCallback(deviceList, dataList))
+    fun setDataList(dataList: List<DeviceInfo>) {
+        val diffResult = calculateDiff(deviceList, dataList)
         deviceList = dataList
         diffResult.dispatchUpdatesTo(this)
     }
@@ -36,21 +35,6 @@ internal class DeviceListAdapter(
 
     override fun getItemCount(): Int = deviceList.size
     override fun getItemViewType(position: Int): Int = DEVICE_VIEW_HOLDER_TYPE
-}
-
-private class DeviceListDiffUtilCallback(
-    private val old: List<DeviceData>,
-    private val new: List<DeviceData>
-) : DiffUtil.Callback() {
-
-    override fun areItemsTheSame(oldItemPosition: Int, newItemPosition: Int): Boolean =
-        old[oldItemPosition].address == new[newItemPosition].address
-
-    override fun areContentsTheSame(oldItemPosition: Int, newItemPosition: Int): Boolean =
-        old[oldItemPosition] == new[newItemPosition]
-
-    override fun getOldListSize(): Int = old.size
-    override fun getNewListSize(): Int = new.size
 }
 
 private const val DEVICE_VIEW_HOLDER_TYPE = 1

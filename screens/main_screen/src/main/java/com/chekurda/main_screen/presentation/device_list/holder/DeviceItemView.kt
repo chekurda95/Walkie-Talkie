@@ -1,60 +1,27 @@
-package com.chekurda.main_screen.presentation.device_list
+package com.chekurda.main_screen.presentation.device_list.holder
 
 import android.content.Context
 import android.graphics.Canvas
 import android.graphics.Color
 import android.view.View
-import androidx.recyclerview.widget.RecyclerView
 import com.chekurda.common.half
 import com.chekurda.design.custom_view_tools.TextLayout
 import com.chekurda.design.custom_view_tools.utils.MeasureSpecUtils.measureDirection
 import com.chekurda.design.custom_view_tools.utils.SimpleTextPaint
 import com.chekurda.design.custom_view_tools.utils.dp
 import com.chekurda.design.custom_view_tools.utils.safeRequestLayout
-import com.chekurda.main_screen.presentation.device_list.DeviceView.DeviceData
+import com.chekurda.main_screen.data.DeviceInfo
 
-internal class DeviceViewHolder private constructor(
-    private val view: DeviceView,
-    private val actionListener: ActionListener
-): RecyclerView.ViewHolder(view) {
-
-    constructor(
-        context: Context,
-        actionListener: ActionListener
-    ) : this(DeviceView(context), actionListener)
-
-    private lateinit var data: DeviceData
-
-    init {
-        view.setOnClickListener { actionListener.onClick(data) }
-    }
-
-    fun bind(data: DeviceData) {
-        this.data = data
-        view.setData(data)
-    }
-
-    fun interface ActionListener {
-
-        fun onClick(data: DeviceData)
-    }
-}
-
-internal class DeviceView(context: Context) : View(context) {
-
-    data class DeviceData(
-        val address: String,
-        val name: String
-    )
+internal class DeviceItemView(context: Context) : View(context) {
 
     private val deviceNameLayout = TextLayout {
         paint = SimpleTextPaint {
             color = Color.BLACK
-            textSize = dp(17).toFloat()
+            textSize = dp(TEXT_SIZE_DP).toFloat()
         }
     }
 
-    fun setData(data: DeviceData) {
+    fun setData(data: DeviceInfo) {
         val isChanged = deviceNameLayout.configure { text = data.name }
         if (isChanged) safeRequestLayout()
     }
@@ -70,7 +37,7 @@ internal class DeviceView(context: Context) : View(context) {
         super.getSuggestedMinimumWidth().coerceAtLeast(deviceNameLayout.width)
 
     override fun getSuggestedMinimumHeight(): Int =
-        super.getSuggestedMinimumHeight().coerceAtLeast(dp(40))
+        super.getSuggestedMinimumHeight().coerceAtLeast(dp(VIEW_HEIGHT_DP))
 
     override fun onLayout(changed: Boolean, left: Int, top: Int, right: Int, bottom: Int) {
         deviceNameLayout.layout(
@@ -83,3 +50,6 @@ internal class DeviceView(context: Context) : View(context) {
         deviceNameLayout.draw(canvas)
     }
 }
+
+private const val VIEW_HEIGHT_DP = 40
+private const val TEXT_SIZE_DP = 17

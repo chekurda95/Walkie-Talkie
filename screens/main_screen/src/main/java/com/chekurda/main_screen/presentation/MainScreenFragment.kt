@@ -3,15 +3,13 @@ package com.chekurda.main_screen.presentation
 import android.Manifest
 import android.bluetooth.BluetoothAdapter
 import android.bluetooth.BluetoothDevice
-import android.content.BroadcastReceiver
-import android.content.Context
-import android.content.Intent
-import android.content.IntentFilter
+import android.bluetooth.BluetoothSocket
 import android.os.Bundle
+import android.util.Log
 import android.view.View
 import android.widget.Button
 import android.widget.ProgressBar
-import androidx.core.app.ActivityCompat
+import android.widget.Toast
 import androidx.core.view.isVisible
 import androidx.fragment.app.Fragment
 import androidx.recyclerview.widget.LinearLayoutManager
@@ -20,13 +18,18 @@ import com.chekurda.common.base_fragment.BasePresenterFragment
 import com.chekurda.common.storeIn
 import com.chekurda.main_screen.R
 import com.chekurda.main_screen.contact.MainScreenFragmentFactory
+import com.chekurda.main_screen.data.DeviceInfo
 import com.chekurda.main_screen.presentation.device_list.DeviceListAdapter
-import com.chekurda.main_screen.presentation.device_list.DeviceView
-import com.chekurda.main_screen.presentation.device_list.DeviceViewHolder
+import com.chekurda.main_screen.presentation.device_list.holder.DeviceViewHolder
+import com.chekurda.main_screen.utils.PermissionsHelper
+import com.chekurda.main_screen.utils.SimpleReceiver
+import io.reactivex.Single
 import io.reactivex.android.schedulers.AndroidSchedulers
-import io.reactivex.disposables.SerialDisposable
+import io.reactivex.disposables.CompositeDisposable
 import io.reactivex.schedulers.Schedulers
 import io.reactivex.subjects.PublishSubject
+import java.lang.Exception
+import java.util.UUID
 
 internal class MainScreenFragment : BasePresenterFragment<MainScreenContract.View, MainScreenContract.Presenter>(),
     MainScreenContract.View {
@@ -36,23 +39,90 @@ internal class MainScreenFragment : BasePresenterFragment<MainScreenContract.Vie
     }
 
     private val itemClickHandler = DeviceViewHolder.ActionListener {
+        connect(it)
+    }
 
+    private var bluetoothSocket: BluetoothSocket? = null
+    private var secureUUID = UUID.fromString(SECURE_UUID)
+
+    private fun connect(device: DeviceInfo) {
+        stopDiscovery()
+        Single.fromCallable {
+            val bluetoothDevice = bluetoothAdapter.getRemoteDevice(device.address)
+            val socket = bluetoothDevice.createRfcommSocketToServiceRecord(secureUUID)
+            try {
+                socket.apply { connect() }
+            } catch (ex: Exception) {
+                socket.close()
+                throw Exception()
+            }
+        }.subscribeOn(Schedulers.io())
+            .observeOn(AndroidSchedulers.mainThread())
+            .subscribe(
+                {
+                    bluetoothSocket = it
+                    disconnectButton?.isVisible = true
+                }, {
+                    Log.e("connect", "${it.message}\n${it.stackTraceToString()}")
+                    Toast.makeText(context, "Не удалось подключиться", Toast.LENGTH_SHORT).show()
+                }
+            ).storeIn(disposer)
+    }
+
+    private fun disconnect() {
+        val socket = bluetoothSocket ?: return
+        try {
+            socket.close()
+        } catch (ex: Exception) {
+            Log.e("close socket", ex.stackTraceToString())
+        }
+        disconnectButton?.isVisible = false
+        bluetoothSocket = null
+    }
+
+    private fun listen() {
+        Single.fromCallable {
+            val serverSocket = bluetoothAdapter.listenUsingRfcommWithServiceRecord("Walkie_Talkie_Service", secureUUID)
+            try {
+                serverSocket.accept()
+            } catch (ex: Exception) {
+                serverSocket?.close()
+                throw Exception()
+            }
+        }.subscribeOn(Schedulers.io())
+            .observeOn(AndroidSchedulers.mainThread())
+            .subscribe(
+                {
+                    bluetoothSocket = it
+                    disconnectButton?.isVisible = true
+                },
+                {
+                    Log.e("listen", "${it.message}\n${it.stackTraceToString()}")
+                    Toast.makeText(context, "Не удалось подключиться к прослушиванию", Toast.LENGTH_SHORT).show()
+                }
+            )
+            .storeIn(disposer)
     }
 
     override val layoutRes: Int = R.layout.main_screen_fragment
 
+    private val permissionsHelper = PermissionsHelper(permissions, PERMISSIONS_REQUEST_CODE) { requireActivity() }
     private val bluetoothAdapter = BluetoothAdapter.getDefaultAdapter()
     private var recyclerView: RecyclerView? = null
     private var progress: ProgressBar? = null
     private var searchButton: Button? = null
+    private var disconnectButton: Button? = null
 
     private var deviceBundleSubject = PublishSubject.create<Bundle>()
     private val bluetoothDeviceSubject = deviceBundleSubject.map { extras ->
         extras.getParcelable<BluetoothDevice>(BluetoothDevice.EXTRA_DEVICE)
-    }.filter { it.type == BluetoothDevice.DEVICE_TYPE_CLASSIC && !it.name.isNullOrBlank() }
-        .distinctUntilChanged()
-    private val disposer = SerialDisposable()
-    private val devices = mutableSetOf<DeviceView.DeviceData>()
+    }.filter { device ->
+        device.type != BluetoothDevice.DEVICE_TYPE_UNKNOWN && !device.name.isNullOrBlank()
+    }.distinctUntilChanged()
+
+    private val disposer = CompositeDisposable()
+
+    private val devices = mutableSetOf<DeviceInfo>()
     private var adapter: DeviceListAdapter = DeviceListAdapter(itemClickHandler)
 
     private val searchReceiver = SimpleReceiver(action = BluetoothDevice.ACTION_FOUND) {
@@ -81,27 +151,38 @@ internal class MainScreenFragment : BasePresenterFragment<MainScreenContract.Vie
             layoutManager = LinearLayoutManager(requireContext())
             adapter = this@MainScreenFragment.adapter
         }
+        disconnectButton = view.findViewById<Button?>(R.id.disconnect_button).apply {
+            setOnClickListener { disconnect() }
+        }
         progress = view.findViewById(R.id.search_progress)
         searchButton = view.findViewById<Button?>(R.id.search_button).apply {
             setOnClickListener { startSearch() }
         }
         subscribeOnDevices()
+        listen()
     }
 
     private fun startSearch() {
-        stopDiscovery()
-        searchStartReceiver.register(requireContext())
-        searchReceiver.register(requireContext())
-        bluetoothAdapter.startDiscovery()
+        permissionsHelper.withPermissions {
+            stopDiscovery()
+            searchStartReceiver.register(requireContext())
+            searchReceiver.register(requireContext())
+            bluetoothAdapter.startDiscovery()
+        }
     }
 
     private fun subscribeOnDevices() {
         bluetoothDeviceSubject.subscribeOn(Schedulers.newThread())
-            .map { device -> DeviceView.DeviceData(device.address, device.name) }
+            .map { device ->
+                DeviceInfo(
+                    address = device.address,
+                    name = device.name
+                )
+            }
             .observeOn(AndroidSchedulers.mainThread())
-            .subscribe { deviceData ->
+            .subscribe { deviceInfo ->
                 val devicesSize = devices.size
-                devices.add(deviceData)
+                devices.add(deviceInfo)
                 if (devicesSize != devices.size) {
                     adapter.setDataList(devices.toList())
                 }
@@ -110,18 +191,19 @@ internal class MainScreenFragment : BasePresenterFragment<MainScreenContract.Vie
 
     override fun onStart() {
         super.onStart()
-        ActivityCompat.requestPermissions(requireActivity(), permissions, 200)
+        permissionsHelper.request()
     }
 
     override fun onStop() {
         super.onStop()
         stopDiscovery()
+        disconnect()
     }
 
     override fun onDestroyView() {
         super.onDestroyView()
         recyclerView = null
-        disposer.dispose()
+        disposer.clear()
     }
 
     override fun createPresenter(): MainScreenContract.Presenter = MainScreenPresenterImpl()
@@ -133,33 +215,8 @@ internal class MainScreenFragment : BasePresenterFragment<MainScreenContract.Vie
         searchReceiver.unregister(requireContext())
         searchStartReceiver.unregister(requireContext())
         searchEndReceiver.unregister(requireContext())
-    }
-}
-
-private class SimpleReceiver(
-    action: String,
-    private val isSingleEvent: Boolean = false,
-    private val onReceive: (Intent) -> Unit
-) : BroadcastReceiver() {
-
-    private val intentFilter = IntentFilter(action)
-    private var isRegistered = false
-
-    override fun onReceive(context: Context, intent: Intent) {
-        onReceive(intent)
-        if (isSingleEvent) unregister(context)
-    }
-
-    fun register(context: Context) {
-        if (isRegistered) return
-        context.registerReceiver(this, intentFilter)
-        isRegistered = true
-    }
-
-    fun unregister(context: Context) {
-        if (!isRegistered) return
-        context.unregisterReceiver(this)
-        isRegistered = false
+        searchButton?.isEnabled = true
+        progress?.isVisible = false
     }
 }
 
@@ -170,3 +227,5 @@ private val permissions = arrayOf(
     Manifest.permission.ACCESS_FINE_LOCATION,
     Manifest.permission.ACCESS_COARSE_LOCATION
 )
+private const val PERMISSIONS_REQUEST_CODE = 102
+private const val SECURE_UUID = "fa87c0d0-afac-11de-8a39-0800200c9a66"

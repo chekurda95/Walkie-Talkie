@@ -30,4 +30,14 @@
         app:layout_constraintBottom_toBottomOf="@id/search_button"
         app:layout_constraintStart_toEndOf="@id/search_button"/>
 
+    <Button
+        android:id="@+id/disconnect_button"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:padding="10dp"
+        android:text="Выйти"
+        android:visibility="gone"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"/>
+
 </androidx.constraintlayout.widget.ConstraintLayout>
