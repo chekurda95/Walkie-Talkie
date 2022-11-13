@@ -1,0 +1,33 @@
+apply plugin: 'gradle-cfg-plugin'
+
+gradleConfig { cfg ->
+    cfg.enableModuleCfg()
+    cfg.enableDataBindingCfg()
+}
+
+dependencies {
+    // Все зависимости должны быть вида api - это нужно для корректной работы тестов
+    api "nl.jqno.equalsverifier:equalsverifier:$rootProject.ext.equalsVerifierVersion"
+    api "io.reactivex.rxjava2:rxjava:$rootProject.ext.rxVersion"
+    api "io.reactivex.rxjava2:rxandroid:$rootProject.ext.rxAndroidVersion"
+    api "androidx.test.ext:junit:$rootProject.ext.androidxJunit"
+    // noinspection GradleCompatible
+    api "androidx.appcompat:appcompat:$rootProject.ext.appCompatVersion"
+    api "junit:junit:$rootProject.ext.junitVersion"
+    api 'pl.pragmatists:JUnitParams:1.1.1'
+    api "org.mockito:mockito-core:$rootProject.ext.mockitoVersion"
+    api "org.mockito:mockito-inline:$rootProject.ext.mockitoVersion"
+    api "com.nhaarman.mockitokotlin2:mockito-kotlin:$rootProject.ext.mockitokotlin2Version"
+    api("org.robolectric:robolectric:$rootProject.ext.robolectricVersion") {
+        // https://github.com/robolectric/robolectric/issues/5245
+        exclude group: 'com.google.auto.service', module: 'auto-service'
+
+        // https://github.com/robolectric/robolectric/issues/5485
+        exclude group: 'org.apache.maven', module: 'maven-ant-tasks'
+    }
+    api "androidx.arch.core:core-testing:$rootProject.ext.archCoreTestingVersion"
+    api "androidx.test:core-ktx:${rootProject.ext.testCoreVersion}"
+    // noinspection FragmentGradleConfiguration
+    api "androidx.fragment:fragment-testing:${rootProject.ext.fragmentTestVersion}"
+    testApi 'org.apache.maven:maven-ant-tasks:2.1.3'
+}

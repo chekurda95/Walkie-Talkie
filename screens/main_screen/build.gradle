@@ -1,0 +1,13 @@
+apply plugin: 'gradle-cfg-plugin'
+gradleConfig { cfg ->
+    cfg.enableModuleCfg()
+    cfg.enableRxCfg()
+    cfg.enableSdkCfg()
+}
+
+dependencies {
+    implementation project(':plugin_struct')
+    implementation project(':common')
+    implementation project(':design')
+    implementation project(':custom_view_tools')
+}

@@ -1,0 +1,11 @@
+include ':common'
+project(':common').projectDir = new File(settingsDir, "$common_dir/common")
+
+include ':plugin_manager'
+project(':plugin_manager').projectDir = new File(settingsDir, "$common_dir/plugin_manager")
+
+include ':plugin_struct'
+project(':plugin_struct').projectDir = new File(settingsDir, "$common_dir/plugin_struct")
+
+include ':testing'
+project(':testing').projectDir = new File(settingsDir, "$common_dir/testing")

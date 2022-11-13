@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="GradleMigrationSettings" migrationVersion="1" />
+  <component name="GradleSettings">
+    <option name="linkedExternalProjectsSettings">
+      <GradleProjectSettings>
+        <compositeConfiguration>
+          <compositeBuild compositeDefinitionSource="SCRIPT">
+            <builds>
+              <build path="$PROJECT_DIR$/gradle/gradle_configs" name="gradle_configs">
+                <projects>
+                  <project path="$PROJECT_DIR$/gradle/gradle_configs" />
+                </projects>
+              </build>
+            </builds>
+          </compositeBuild>
+        </compositeConfiguration>
+        <option name="testRunner" value="GRADLE" />
+        <option name="distributionType" value="DEFAULT_WRAPPED" />
+        <option name="externalProjectPath" value="$PROJECT_DIR$" />
+        <option name="modules">
+          <set>
+            <option value="$PROJECT_DIR$" />
+            <option value="$PROJECT_DIR$/app" />
+            <option value="$PROJECT_DIR$/common/common" />
+            <option value="$PROJECT_DIR$/common/plugin_manager" />
+            <option value="$PROJECT_DIR$/common/plugin_struct" />
+            <option value="$PROJECT_DIR$/common/testing" />
+            <option value="$PROJECT_DIR$/design/custom_view_tools" />
+            <option value="$PROJECT_DIR$/design/design" />
+            <option value="$PROJECT_DIR$/gradle/gradle_configs" />
+            <option value="$PROJECT_DIR$/screens/main_screen" />
+          </set>
+        </option>
+        <option name="resolveModulePerSourceSet" value="false" />
+      </GradleProjectSettings>
+    </option>
+  </component>
+</project>

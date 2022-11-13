@@ -1,0 +1,11 @@
+includeBuild("gradle/gradle_configs")
+include ':app'
+
+ext.common_dir = 'common'
+apply from: "$common_dir/settings.gradle"
+
+ext.design_dir = 'design'
+apply from: "$design_dir/settings.gradle"
+
+ext.screens_dir = 'screens'
+apply from: "$screens_dir/settings.gradle"

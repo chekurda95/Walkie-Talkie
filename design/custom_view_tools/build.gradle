@@ -1,0 +1,14 @@
+apply plugin: 'gradle-cfg-plugin'
+
+gradleConfig { cfg ->
+    cfg.enableModuleCfg()
+    cfg.enableSdkCfg()
+}
+
+dependencies {
+    implementation project(':common')
+
+    implementation "com.jakewharton.timber:timber:$rootProject.ext.timberVersion"
+
+    testImplementation project(':testing')
+}

@@ -1,0 +1,12 @@
+apply plugin: 'gradle-cfg-plugin'
+
+gradleConfig { cfg ->
+    cfg.enableModuleCfg()
+    cfg.enableRxCfg()
+}
+
+dependencies {
+    api project(':plugin_struct')
+
+    testImplementation project(':testing')
+}

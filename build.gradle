@@ -1,0 +1,16 @@
+buildscript {
+    apply from: "gradle/gradle_configs/project_params.gradle"
+
+    addRepos(repositories)
+    dependencies { handler ->
+        addBaseBuildScriptDependency(handler)
+    }
+}
+
+allprojects {
+    addRepos(repositories)
+}
+
+task clean(type: Delete) {
+    delete rootProject.buildDir
+}

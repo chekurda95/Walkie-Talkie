@@ -1,0 +1,5 @@
+apply plugin: 'gradle-cfg-plugin'
+
+gradleConfig { cfg ->
+    cfg.enableModuleCfg()
+}

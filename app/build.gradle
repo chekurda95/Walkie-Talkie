@@ -1,0 +1,12 @@
+apply plugin: 'gradle-cfg-plugin'
+
+gradleConfig { cfg ->
+    cfg.enableApplicationCfg()
+}
+
+dependencies {
+    implementation project(':plugin_manager')
+    implementation project(':common')
+    implementation project(':design')
+    implementation project(':main_screen')
+}
