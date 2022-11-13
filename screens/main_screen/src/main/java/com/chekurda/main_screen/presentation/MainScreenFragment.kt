@@ -78,6 +78,7 @@ internal class MainScreenFragment : BasePresenterFragment<MainScreenContract.Vie
         }
         disconnectButton?.isVisible = false
         bluetoothSocket = null
+        listen()
     }
 
     private fun listen() {
