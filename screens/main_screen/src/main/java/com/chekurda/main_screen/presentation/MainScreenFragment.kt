@@ -4,8 +4,14 @@ import android.Manifest
 import android.bluetooth.BluetoothAdapter
 import android.bluetooth.BluetoothDevice
 import android.bluetooth.BluetoothSocket
+import android.media.AudioAttributes
+import android.media.AudioFormat
+import android.media.AudioRecord
+import android.media.AudioTrack
+import android.media.MediaRecorder
 import android.os.Bundle
 import android.util.Log
+import android.view.MotionEvent
 import android.view.View
 import android.widget.Button
 import android.widget.ProgressBar
@@ -28,7 +34,6 @@ import io.reactivex.android.schedulers.AndroidSchedulers
 import io.reactivex.disposables.CompositeDisposable
 import io.reactivex.schedulers.Schedulers
 import io.reactivex.subjects.PublishSubject
-import java.lang.Exception
 import java.util.UUID
 
 internal class MainScreenFragment : BasePresenterFragment<MainScreenContract.View, MainScreenContract.Presenter>(),
@@ -60,8 +65,7 @@ internal class MainScreenFragment : BasePresenterFragment<MainScreenContract.Vie
             .observeOn(AndroidSchedulers.mainThread())
             .subscribe(
                 {
-                    bluetoothSocket = it
-                    disconnectButton?.isVisible = true
+                    onConnected(it)
                 }, {
                     Log.e("connect", "${it.message}\n${it.stackTraceToString()}")
                     Toast.makeText(context, "Не удалось подключиться", Toast.LENGTH_SHORT).show()
@@ -76,12 +80,12 @@ internal class MainScreenFragment : BasePresenterFragment<MainScreenContract.Vie
         } catch (ex: Exception) {
             Log.e("close socket", ex.stackTraceToString())
         }
-        disconnectButton?.isVisible = false
         bluetoothSocket = null
-        listen()
+        onLostConnection()
+        listenConnection()
     }
 
-    private fun listen() {
+    private fun listenConnection() {
         Single.fromCallable {
             val serverSocket = bluetoothAdapter.listenUsingRfcommWithServiceRecord("Walkie_Talkie_Service", secureUUID)
             try {
@@ -94,8 +98,7 @@ internal class MainScreenFragment : BasePresenterFragment<MainScreenContract.Vie
             .observeOn(AndroidSchedulers.mainThread())
             .subscribe(
                 {
-                    bluetoothSocket = it
-                    disconnectButton?.isVisible = true
+                    onConnected(it)
                 },
                 {
                     Log.e("listen", "${it.message}\n${it.stackTraceToString()}")
@@ -113,6 +116,7 @@ internal class MainScreenFragment : BasePresenterFragment<MainScreenContract.Vie
     private var progress: ProgressBar? = null
     private var searchButton: Button? = null
     private var disconnectButton: Button? = null
+    private var sayButton: Button? = null
 
     private var deviceBundleSubject = PublishSubject.create<Bundle>()
     private val bluetoothDeviceSubject = deviceBundleSubject.map { extras ->
@@ -159,8 +163,22 @@ internal class MainScreenFragment : BasePresenterFragment<MainScreenContract.Vie
         searchButton = view.findViewById<Button?>(R.id.search_button).apply {
             setOnClickListener { startSearch() }
         }
+        sayButton = view.findViewById<Button?>(R.id.say_button).apply {
+            setOnTouchListener { v, event ->
+                when (event.action) {
+                    MotionEvent.ACTION_DOWN -> {
+                        isButtonPressed = true
+                    }
+                    MotionEvent.ACTION_CANCEL,
+                    MotionEvent.ACTION_UP -> {
+                        isButtonPressed = false
+                    }
+                }
+                false
+            }
+        }
         subscribeOnDevices()
-        listen()
+        listenConnection()
     }
 
     private fun startSearch() {
@@ -218,6 +236,101 @@ internal class MainScreenFragment : BasePresenterFragment<MainScreenContract.Vie
         searchEndReceiver.unregister(requireContext())
         searchButton?.isEnabled = true
         progress?.isVisible = false
+    }
+
+    var track: AudioTrack? = null
+    var recorder: AudioRecord? = null
+    val minBufferSize = AudioTrack.getMinBufferSize(16000, AudioFormat.CHANNEL_OUT_MONO, AudioFormat.ENCODING_PCM_16BIT)
+
+    private fun onConnected(socket: BluetoothSocket) {
+        bluetoothSocket = socket
+        disconnectButton?.isVisible = true
+        sayButton?.isVisible = true
+
+
+        val attrs = AudioAttributes.Builder()
+            .setContentType(AudioAttributes.CONTENT_TYPE_SPEECH)
+            .build()
+        val format = AudioFormat.Builder()
+            .setSampleRate(16000)
+            .setEncoding(AudioFormat.ENCODING_PCM_16BIT)
+            .setChannelMask(AudioFormat.CHANNEL_OUT_FRONT_LEFT)
+            .build()
+        track = AudioTrack.Builder()
+            .setAudioAttributes(attrs)
+            .setAudioFormat(format)
+            .setBufferSizeInBytes(minBufferSize)
+            .setTransferMode(AudioTrack.MODE_STREAM)
+            .build()
+        recorder = AudioRecord(MediaRecorder.AudioSource.MIC, 16000,
+            AudioFormat.CHANNEL_IN_MONO, AudioFormat.ENCODING_PCM_16BIT,
+            minBufferSize
+        )
+        startPlaying()
+        startRecording()
+    }
+
+    private var playThread: Thread? = null
+
+    private fun startPlaying() {
+        track?.play()
+        playThread = object : Thread() {
+
+            private val socket = bluetoothSocket!!
+            private val inStream = socket.inputStream
+
+            override fun run() {
+                super.run()
+                val buffer = ByteArray(minBufferSize)
+                while (bluetoothSocket != null) {
+                    if (socket.isConnected) {
+                        if (inStream.available() == 0) continue
+                        if (!isButtonPressed) {
+                            inStream.read(buffer)
+                            track?.write(buffer, 0, buffer.size)
+                        }
+                    } else {
+                        socket.close()
+                        bluetoothSocket = null
+                        view?.post {
+                            onLostConnection()
+                        }
+                        break
+                    }
+                }
+            }
+        }.apply { start() }
+    }
+
+    private var recordThread: Thread? = null
+    @Volatile
+    private var isButtonPressed: Boolean = false
+
+    private fun startRecording() {
+        recorder?.startRecording()
+        val buffer = ByteArray(minBufferSize)
+        recordThread = object : Thread() {
+
+            val socket = bluetoothSocket!!
+            val outputStream = socket.outputStream
+
+            override fun run() {
+                super.run()
+                while (bluetoothSocket != null) {
+                    if (socket.isConnected && isButtonPressed) {
+                        recorder!!.read(buffer, 0, buffer.size)
+                        outputStream.write(buffer)
+                    }
+                }
+            }
+        }.apply { start() }
+    }
+
+    private fun onLostConnection() {
+        disconnectButton?.isVisible = false
+        sayButton?.isVisible = false
+        recorder = null
+        track = null
     }
 }
 
