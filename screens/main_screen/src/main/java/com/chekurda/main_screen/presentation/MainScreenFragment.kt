@@ -1,14 +1,21 @@
 package com.chekurda.main_screen.presentation
 
 import android.Manifest
-import android.bluetooth.BluetoothAdapter
-import android.bluetooth.BluetoothDevice
-import android.bluetooth.BluetoothSocket
+import android.annotation.SuppressLint
+import android.content.BroadcastReceiver
+import android.content.Context
+import android.content.Intent
+import android.content.IntentFilter
 import android.media.AudioAttributes
 import android.media.AudioFormat
 import android.media.AudioRecord
 import android.media.AudioTrack
 import android.media.MediaRecorder
+import android.net.NetworkInfo
+import android.net.wifi.WpsInfo
+import android.net.wifi.p2p.WifiP2pConfig
+import android.net.wifi.p2p.WifiP2pDevice
+import android.net.wifi.p2p.WifiP2pManager
 import android.os.Bundle
 import android.util.Log
 import android.view.MotionEvent
@@ -28,13 +35,14 @@ import com.chekurda.main_screen.data.DeviceInfo
 import com.chekurda.main_screen.presentation.device_list.DeviceListAdapter
 import com.chekurda.main_screen.presentation.device_list.holder.DeviceViewHolder
 import com.chekurda.main_screen.utils.PermissionsHelper
-import com.chekurda.main_screen.utils.SimpleReceiver
-import io.reactivex.Single
 import io.reactivex.android.schedulers.AndroidSchedulers
 import io.reactivex.disposables.CompositeDisposable
 import io.reactivex.schedulers.Schedulers
 import io.reactivex.subjects.PublishSubject
-import java.util.UUID
+import java.net.InetAddress
+import java.net.InetSocketAddress
+import java.net.ServerSocket
+import java.net.Socket
 
 internal class MainScreenFragment : BasePresenterFragment<MainScreenContract.View, MainScreenContract.Presenter>(),
     MainScreenContract.View {
@@ -47,109 +55,121 @@ internal class MainScreenFragment : BasePresenterFragment<MainScreenContract.Vie
         connect(it)
     }
 
-    private var bluetoothSocket: BluetoothSocket? = null
-    private var secureUUID = UUID.fromString(SECURE_UUID)
-
+    @SuppressLint("MissingPermission")
     private fun connect(device: DeviceInfo) {
-        stopDiscovery()
-        Single.fromCallable {
-            val bluetoothDevice = bluetoothAdapter.getRemoteDevice(device.address)
-            val socket = bluetoothDevice.createRfcommSocketToServiceRecord(secureUUID)
-            try {
-                socket.apply { connect() }
-            } catch (ex: Exception) {
-                socket.close()
-                throw Exception()
-            }
-        }.subscribeOn(Schedulers.io())
-            .observeOn(AndroidSchedulers.mainThread())
-            .subscribe(
-                {
-                    onConnected(it)
-                }, {
-                    Log.e("connect", "${it.message}\n${it.stackTraceToString()}")
-                    Toast.makeText(context, "Не удалось подключиться", Toast.LENGTH_SHORT).show()
+        val config = WifiP2pConfig().apply {
+            deviceAddress = device.address
+            wps.setup = WpsInfo.PBC
+        }
+        permissionsHelper.withPermissions {
+            manager.connect(channel, config, object : WifiP2pManager.ActionListener {
+                override fun onSuccess() {
+                    manager.stopPeerDiscovery(channel, object : WifiP2pManager.ActionListener {
+                        override fun onSuccess() {}
+                        override fun onFailure(reason: Int) {}
+                    })
                 }
-            ).storeIn(disposer)
+
+                override fun onFailure(reason: Int) {
+                    Toast.makeText(
+                        this@MainScreenFragment.context,
+                        "Connect failed. Retry.",
+                        Toast.LENGTH_SHORT
+                    ).show()
+                }
+            })
+        }
     }
 
     private fun disconnect() {
-        val socket = bluetoothSocket ?: return
-        try {
-            socket.close()
-        } catch (ex: Exception) {
-            Log.e("close socket", ex.stackTraceToString())
-        }
-        bluetoothSocket = null
-        onLostConnection()
-        listenConnection()
-    }
-
-    private fun listenConnection() {
-        Single.fromCallable {
-            val serverSocket = bluetoothAdapter.listenUsingRfcommWithServiceRecord("Walkie_Talkie_Service", secureUUID)
-            try {
-                serverSocket.accept()
-            } catch (ex: Exception) {
-                serverSocket?.close()
-                throw Exception()
+        manager.removeGroup(channel, object : WifiP2pManager.ActionListener {
+            override fun onSuccess() {
+                onDisconnected()
             }
-        }.subscribeOn(Schedulers.io())
-            .observeOn(AndroidSchedulers.mainThread())
-            .subscribe(
-                {
-                    onConnected(it)
-                },
-                {
-                    Log.e("listen", "${it.message}\n${it.stackTraceToString()}")
-                    Toast.makeText(context, "Не удалось подключиться к прослушиванию", Toast.LENGTH_SHORT).show()
-                }
-            )
-            .storeIn(disposer)
+
+            override fun onFailure(reason: Int) {
+                Toast.makeText(
+                    this@MainScreenFragment.context,
+                    "Cancel connect failed. Retry.",
+                    Toast.LENGTH_SHORT
+                ).show()
+            }
+        })
     }
 
     override val layoutRes: Int = R.layout.main_screen_fragment
 
     private val permissionsHelper = PermissionsHelper(permissions, PERMISSIONS_REQUEST_CODE) { requireActivity() }
-    private val bluetoothAdapter = BluetoothAdapter.getDefaultAdapter()
     private var recyclerView: RecyclerView? = null
     private var progress: ProgressBar? = null
     private var searchButton: Button? = null
     private var disconnectButton: Button? = null
     private var sayButton: Button? = null
 
-    private var deviceBundleSubject = PublishSubject.create<Bundle>()
-    private val bluetoothDeviceSubject = deviceBundleSubject.map { extras ->
-        extras.getParcelable<BluetoothDevice>(BluetoothDevice.EXTRA_DEVICE)
-    }.filter { device ->
-        device.type != BluetoothDevice.DEVICE_TYPE_UNKNOWN && !device.name.isNullOrBlank()
-    }.distinctUntilChanged()
+    private val wifiDeviceSubject = PublishSubject.create<List<WifiP2pDevice>>()
 
     private val disposer = CompositeDisposable()
 
-    private val devices = mutableSetOf<DeviceInfo>()
+    private val devices = mutableListOf<DeviceInfo>()
     private var adapter: DeviceListAdapter = DeviceListAdapter(itemClickHandler)
 
-    private val searchReceiver = SimpleReceiver(action = BluetoothDevice.ACTION_FOUND) {
-        deviceBundleSubject.onNext(it.extras!!)
-    }
-    private val searchStartReceiver = SimpleReceiver(
-        action = BluetoothAdapter.ACTION_DISCOVERY_STARTED,
-        isSingleEvent = true
-    ) {
-        searchButton?.isEnabled = false
-        progress?.isVisible = true
-        searchEndReceiver.register(requireContext())
-    }
-    private val searchEndReceiver = SimpleReceiver(
-        action = BluetoothAdapter.ACTION_DISCOVERY_FINISHED,
-        isSingleEvent = true
-    ) {
-        searchButton?.isEnabled = true
-        progress?.isVisible = false
-        context?.unregisterReceiver(searchReceiver)
+    private val intentFilter = IntentFilter().apply {
+        addAction(WifiP2pManager.WIFI_P2P_STATE_CHANGED_ACTION)
+        addAction(WifiP2pManager.WIFI_P2P_PEERS_CHANGED_ACTION)
+        addAction(WifiP2pManager.WIFI_P2P_CONNECTION_CHANGED_ACTION)
+        addAction(WifiP2pManager.WIFI_P2P_THIS_DEVICE_CHANGED_ACTION)
     }
 
+    private val peerListListener = WifiP2pManager.PeerListListener { peerList ->
+        wifiDeviceSubject.onNext(peerList.deviceList.toList())
+    }
+
+    private lateinit var channel: WifiP2pManager.Channel
+    private lateinit var manager: WifiP2pManager
+    @Volatile private var isConnected = false
+
+    private lateinit var address: InetAddress
+    private var groupOwner = false
+
+    private var isWifiP2pEnabled = false
+    private val wifiReceiver = object : BroadcastReceiver() {
+
+        private val connectionListener = WifiP2pManager.ConnectionInfoListener { info ->
+            // String from WifiP2pInfo struct
+            address = info.groupOwnerAddress
+            groupOwner = info.isGroupOwner
+            onConnected()
+        }
+
+        @SuppressLint("MissingPermission")
+        override fun onReceive(context: Context, intent: Intent) {
+            when(intent.action) {
+                WifiP2pManager.WIFI_P2P_STATE_CHANGED_ACTION -> {
+                    val state = intent.getIntExtra(WifiP2pManager.EXTRA_WIFI_STATE, -1)
+                    isWifiP2pEnabled = state == WifiP2pManager.WIFI_P2P_STATE_ENABLED
+                }
+                WifiP2pManager.WIFI_P2P_PEERS_CHANGED_ACTION -> {
+                    permissionsHelper.withPermissions {
+                        manager.requestPeers(channel, peerListListener)
+                    }
+                }
+                WifiP2pManager.WIFI_P2P_CONNECTION_CHANGED_ACTION -> {
+                    val networkInfo: NetworkInfo? = intent.getParcelableExtra(WifiP2pManager.EXTRA_NETWORK_INFO)
+                    if (networkInfo?.isConnected == true) {
+                        manager.requestConnectionInfo(channel, connectionListener)
+                    } else {
+                        onDisconnected()
+                    }
+                    Log.e("TAGTAG", "WIFI_P2P_CONNECTION_CHANGED_ACTION")
+                }
+                WifiP2pManager.WIFI_P2P_THIS_DEVICE_CHANGED_ACTION -> {
+                    Log.e("TAGTAG", "WIFI_P2P_THIS_DEVICE_CHANGED_ACTION")
+                }
+            }
+        }
+    }
+
+    @SuppressLint("ClickableViewAccessibility")
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
         recyclerView = view.findViewById<RecyclerView>(R.id.device_list).apply {
@@ -178,33 +198,40 @@ internal class MainScreenFragment : BasePresenterFragment<MainScreenContract.Vie
             }
         }
         subscribeOnDevices()
-        listenConnection()
+        manager = requireActivity().getSystemService(Context.WIFI_P2P_SERVICE) as WifiP2pManager
+        channel = manager.initialize(requireActivity(), requireActivity().mainLooper, null)
     }
 
+    @SuppressLint("MissingPermission")
     private fun startSearch() {
         permissionsHelper.withPermissions {
-            stopDiscovery()
-            searchStartReceiver.register(requireContext())
-            searchReceiver.register(requireContext())
-            bluetoothAdapter.startDiscovery()
+            manager.discoverPeers(channel, object : WifiP2pManager.ActionListener {
+                override fun onSuccess() {
+                }
+
+                override fun onFailure(reasonCode: Int) {
+
+                }
+            })
         }
     }
 
     private fun subscribeOnDevices() {
-        bluetoothDeviceSubject.subscribeOn(Schedulers.newThread())
-            .map { device ->
-                DeviceInfo(
-                    address = device.address,
-                    name = device.name
-                )
+        wifiDeviceSubject.subscribeOn(Schedulers.newThread())
+            .distinctUntilChanged()
+            .map { deviceList ->
+                deviceList.map { device ->
+                    DeviceInfo(
+                        address = device.deviceAddress,
+                        name = device.deviceName
+                    )
+                }
             }
             .observeOn(AndroidSchedulers.mainThread())
             .subscribe { deviceInfo ->
-                val devicesSize = devices.size
-                devices.add(deviceInfo)
-                if (devicesSize != devices.size) {
-                    adapter.setDataList(devices.toList())
-                }
+                devices.clear()
+                devices.addAll(deviceInfo)
+                adapter.setDataList(devices.toList())
             }.storeIn(disposer)
     }
 
@@ -216,7 +243,16 @@ internal class MainScreenFragment : BasePresenterFragment<MainScreenContract.Vie
     override fun onStop() {
         super.onStop()
         stopDiscovery()
-        disconnect()
+    }
+
+    override fun onResume() {
+        super.onResume()
+        requireContext().registerReceiver(wifiReceiver, intentFilter)
+    }
+
+    override fun onPause() {
+        super.onPause()
+        requireContext().unregisterReceiver(wifiReceiver)
     }
 
     override fun onDestroyView() {
@@ -228,12 +264,6 @@ internal class MainScreenFragment : BasePresenterFragment<MainScreenContract.Vie
     override fun createPresenter(): MainScreenContract.Presenter = MainScreenPresenterImpl()
 
     private fun stopDiscovery() {
-        if (bluetoothAdapter.isDiscovering) {
-            bluetoothAdapter.cancelDiscovery()
-        }
-        searchReceiver.unregister(requireContext())
-        searchStartReceiver.unregister(requireContext())
-        searchEndReceiver.unregister(requireContext())
         searchButton?.isEnabled = true
         progress?.isVisible = false
     }
@@ -242,11 +272,10 @@ internal class MainScreenFragment : BasePresenterFragment<MainScreenContract.Vie
     var recorder: AudioRecord? = null
     val minBufferSize = AudioTrack.getMinBufferSize(16000, AudioFormat.CHANNEL_OUT_MONO, AudioFormat.ENCODING_PCM_16BIT)
 
-    private fun onConnected(socket: BluetoothSocket) {
-        bluetoothSocket = socket
+    private fun onConnected() {
+        isConnected = true
         disconnectButton?.isVisible = true
         sayButton?.isVisible = true
-
 
         val attrs = AudioAttributes.Builder()
             .setContentType(AudioAttributes.CONTENT_TYPE_SPEECH)
@@ -266,71 +295,55 @@ internal class MainScreenFragment : BasePresenterFragment<MainScreenContract.Vie
             AudioFormat.CHANNEL_IN_MONO, AudioFormat.ENCODING_PCM_16BIT,
             minBufferSize
         )
-        startPlaying()
         startRecording()
+        startPlaying()
+    }
+
+    private fun onDisconnected() {
+        isConnected = false
+        disconnectButton?.isVisible = false
+        sayButton?.isVisible = false
     }
 
     private var playThread: Thread? = null
-
     private fun startPlaying() {
         track?.play()
         playThread = object : Thread() {
 
-            private val socket = bluetoothSocket!!
-            private val inStream = socket.inputStream
-
+            lateinit var socket: Socket
             override fun run() {
                 super.run()
                 val buffer = ByteArray(minBufferSize)
-                while (bluetoothSocket != null) {
-                    if (socket.isConnected) {
-                        if (inStream.available() == 0) continue
-                        if (!isButtonPressed) {
-                            inStream.read(buffer)
-                            track?.write(buffer, 0, buffer.size)
-                        }
-                    } else {
-                        socket.close()
-                        bluetoothSocket = null
-                        view?.post {
-                            onLostConnection()
-                        }
-                        break
+                if (groupOwner) {
+                    val serverSocket = ServerSocket(1234, 50, address)
+                    socket = serverSocket.accept()
+                } else {
+                    socket = Socket()
+                    socket.connect(InetSocketAddress(address, 1234), 500)
+                }
+                val inputStream = socket.getInputStream()
+                val outputStream = socket.getOutputStream()
+                while (isConnected) {
+                    if (isButtonPressed) {
+                        recorder!!.read(buffer, 0, buffer.size)
+                        outputStream.write(buffer)
+                    }
+                    if (inputStream.available() == 0) continue
+                    if (!isButtonPressed) {
+                        inputStream.read(buffer)
+                        track?.write(buffer, 0, buffer.size)
                     }
                 }
+                socket.close()
             }
         }.apply { start() }
     }
 
-    private var recordThread: Thread? = null
     @Volatile
     private var isButtonPressed: Boolean = false
 
     private fun startRecording() {
         recorder?.startRecording()
-        val buffer = ByteArray(minBufferSize)
-        recordThread = object : Thread() {
-
-            val socket = bluetoothSocket!!
-            val outputStream = socket.outputStream
-
-            override fun run() {
-                super.run()
-                while (bluetoothSocket != null) {
-                    if (socket.isConnected && isButtonPressed) {
-                        recorder!!.read(buffer, 0, buffer.size)
-                        outputStream.write(buffer)
-                    }
-                }
-            }
-        }.apply { start() }
-    }
-
-    private fun onLostConnection() {
-        disconnectButton?.isVisible = false
-        sayButton?.isVisible = false
-        recorder = null
-        track = null
     }
 }
 
@@ -342,4 +355,3 @@ private val permissions = arrayOf(
     Manifest.permission.ACCESS_COARSE_LOCATION
 )
 private const val PERMISSIONS_REQUEST_CODE = 102
-private const val SECURE_UUID = "fa87c0d0-afac-11de-8a39-0800200c9a66"
