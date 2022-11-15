@@ -6,9 +6,20 @@ import android.media.AudioRecord
 import android.media.AudioTrack
 import android.media.MediaRecorder
 import android.os.Build
+import androidx.annotation.WorkerThread
 import java.net.Socket
+import java.nio.BufferUnderflowException
+import java.nio.ByteBuffer
+import kotlin.math.sqrt
 
 internal class AudioStreamer {
+
+    interface AmplitudeListener {
+        @WorkerThread
+        fun onInputAmplitudeChanged(amplitude: Float)
+        @WorkerThread
+        fun onOutputAmplitudeChanged(amplitude: Float)
+    }
 
     private var track: AudioTrack? = null
     private var recorder: AudioRecord? = null
@@ -18,10 +29,13 @@ internal class AudioStreamer {
         AudioFormat.CHANNEL_OUT_MONO,
         ENCODING_TYPE
     )
+
     @Volatile
     private var isConnected: Boolean = false
     @Volatile
     private var isListening: Boolean = true
+
+    var amplitudeListener: AmplitudeListener? = null
 
     fun changeStreamDirection(isListening: Boolean) {
         this.isListening = isListening
@@ -78,14 +92,15 @@ internal class AudioStreamer {
         object : Thread() {
             override fun run() {
                 super.run()
-                val buffer = ByteArray(minBufferSize)
+                val byteArray = ByteArray(minBufferSize)
                 val inputStream = socket.getInputStream()
                 kotlin.runCatching {
                     while (isConnected) {
                         if (inputStream.available() == 0) continue
                         if (isListening) {
-                            inputStream.read(buffer)
-                            track?.write(buffer, 0, buffer.size)
+                            inputStream.read(byteArray)
+                            track?.write(byteArray, 0, byteArray.size)
+                            amplitudeListener?.onInputAmplitudeChanged(getAmplitude(byteArray, byteArray.size))
                         }
                     }
                 }.apply { if (isFailure) onDisconnect() }
@@ -98,13 +113,14 @@ internal class AudioStreamer {
         object : Thread() {
             override fun run() {
                 super.run()
-                val buffer = ByteArray(minBufferSize)
+                val byteArray = ByteArray(minBufferSize)
                 val outputStream = socket.getOutputStream()
                 kotlin.runCatching {
                     while (isConnected) {
                         if (!isListening) {
-                            recorder!!.read(buffer, 0, buffer.size)
-                            outputStream.write(buffer)
+                            recorder!!.read(byteArray, 0, byteArray.size)
+                            outputStream.write(byteArray)
+                            amplitudeListener?.onOutputAmplitudeChanged(getAmplitude(byteArray, byteArray.size))
                         }
                     }
                 }.apply { if (isFailure) onDisconnect() }
@@ -112,7 +128,25 @@ internal class AudioStreamer {
                 socket.close()
             }
         }.apply { priority = Thread.MAX_PRIORITY }
+
+    private fun getAmplitude(byteArray: ByteArray, length: Int): Float {
+        val buffer = ByteBuffer.wrap(byteArray)
+        var sum = 0.0f
+        try {
+            repeat(length / 2) {
+                val peak = buffer.short
+                sum += peak * peak
+            }
+        } catch (ignore: BufferUnderflowException) {}
+
+        return sqrt(sum / length / 2) / AMPLITUDE_SCALE
+    }
 }
 
 private const val SAMPLE_RATE = 16000
 private const val ENCODING_TYPE = AudioFormat.ENCODING_PCM_16BIT
+
+/**
+ * Масштаб амплитуды громкости для кнопки записи.
+ */
+private const val AMPLITUDE_SCALE = 1800

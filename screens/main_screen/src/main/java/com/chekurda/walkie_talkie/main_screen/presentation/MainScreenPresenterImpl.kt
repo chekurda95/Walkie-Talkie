@@ -4,20 +4,25 @@ import android.net.wifi.p2p.WifiP2pDevice
 import com.chekurda.common.base_fragment.BasePresenterImpl
 import com.chekurda.walkie_talkie.main_screen.data.DeviceInfo
 import com.chekurda.walkie_talkie.main_screen.data.deviceInfo
+import com.chekurda.walkie_talkie.main_screen.domain.AudioStreamer
 import com.chekurda.walkie_talkie.main_screen.domain.WifiDirectConnectionManager
 
 internal class MainScreenPresenterImpl(
     private val wifiDirectManager: WifiDirectConnectionManager
 ) : BasePresenterImpl<MainScreenContract.View>(),
     MainScreenContract.Presenter,
-    WifiDirectConnectionManager.ProcessListener {
+    WifiDirectConnectionManager.ProcessListener,
+    AudioStreamer.AmplitudeListener {
 
     private var deviceInfoList: List<DeviceInfo> = emptyList()
     private var isConnected: Boolean = false
     private var connectedDevice: DeviceInfo? = null
 
     init {
-        wifiDirectManager.processListener = this
+        wifiDirectManager.apply {
+            processListener = this@MainScreenPresenterImpl
+            amplitudeListener = this@MainScreenPresenterImpl
+        }
     }
 
     override fun attachView(view: MainScreenContract.View) {
@@ -82,6 +87,14 @@ internal class MainScreenPresenterImpl(
             this.connectedDevice = null
             view?.showConnectionError()
         }
+    }
+
+    override fun onInputAmplitudeChanged(amplitude: Float) {
+        view?.onInputAmplitudeChanged(amplitude)
+    }
+
+    override fun onOutputAmplitudeChanged(amplitude: Float) {
+        view?.onOutputAmplitudeChanged(amplitude)
     }
 
     override fun onDestroy() {

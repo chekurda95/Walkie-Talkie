@@ -120,6 +120,14 @@ internal class MainScreenFragment : BasePresenterFragment<MainScreenContract.Vie
         TODO("Рассоединение прошло успешно.")
     }
 
+    override fun onInputAmplitudeChanged(amplitude: Float) {
+        view?.post { TODO("Отобразить амплитуду входящего звука") }
+    }
+
+    override fun onOutputAmplitudeChanged(amplitude: Float) {
+        view?.post { TODO("Отобразить амплитуду исходящего звука") }
+    }
+
     override fun provideActivity(): Activity = requireActivity()
 
     /**

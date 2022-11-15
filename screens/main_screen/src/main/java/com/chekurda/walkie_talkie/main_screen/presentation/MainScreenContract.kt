@@ -3,10 +3,11 @@ package com.chekurda.walkie_talkie.main_screen.presentation
 import android.app.Activity
 import com.chekurda.common.base_fragment.BasePresenter
 import com.chekurda.walkie_talkie.main_screen.data.DeviceInfo
+import com.chekurda.walkie_talkie.main_screen.domain.AudioStreamer
 
 internal interface MainScreenContract {
 
-    interface View {
+    interface View : AudioStreamer.AmplitudeListener {
         fun changeDeviceListVisibility(isVisible: Boolean)
         fun updateDeviceList(deviceInfoList: List<DeviceInfo>)
         fun showConnectedState(connectedDevice: DeviceInfo)

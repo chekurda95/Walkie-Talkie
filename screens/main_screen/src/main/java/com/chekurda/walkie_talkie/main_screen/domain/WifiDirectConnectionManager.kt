@@ -60,6 +60,12 @@ internal class WifiDirectConnectionManager(
         }
     )
 
+    var amplitudeListener: AudioStreamer.AmplitudeListener?
+        get() = audioStreamer.amplitudeListener
+        set(value) {
+            audioStreamer.amplitudeListener = value
+        }
+
     fun init(activity: Activity) {
         manager = activity.getSystemService(Context.WIFI_P2P_SERVICE) as WifiP2pManager
         channel = manager!!.initialize(activity, activity.mainLooper, null)
