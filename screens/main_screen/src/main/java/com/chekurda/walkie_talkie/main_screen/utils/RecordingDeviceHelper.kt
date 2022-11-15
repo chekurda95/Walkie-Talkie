@@ -2,7 +2,6 @@ package com.chekurda.walkie_talkie.main_screen.utils
 
 import android.app.Activity
 import android.content.Context
-import android.content.pm.ActivityInfo
 import android.media.AudioManager
 import android.os.PowerManager
 
@@ -36,18 +35,9 @@ internal class RecordingDeviceHelper(private val activity: Activity) {
     fun configureDevice(isStartRecording: Boolean) {
         if (isConfigured && isStartRecording || !(isConfigured || isStartRecording)) return
         isConfigured = isStartRecording
-        requestLockOrientation(isStartRecording)
         requestBluetoothSco(isStartRecording)
         requestAudioFocus(isStartRecording)
         requestWakeLock(isStartRecording)
-    }
-
-    private fun requestLockOrientation(request: Boolean) {
-        activity.requestedOrientation = if (request) {
-            ActivityInfo.SCREEN_ORIENTATION_LOCKED
-        } else {
-            ActivityInfo.SCREEN_ORIENTATION_UNSPECIFIED
-        }
     }
 
     private fun requestBluetoothSco(request: Boolean) = with(systemAudioManager) {

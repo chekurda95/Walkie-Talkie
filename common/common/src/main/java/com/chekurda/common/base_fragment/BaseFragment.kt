@@ -41,11 +41,13 @@ abstract class BasePresenterFragment<VIEW, PRESENTER : BasePresenter<VIEW>> :  F
     @Suppress("UNCHECKED_CAST")
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         presenter.attachView(this as VIEW)
+        lifecycle.addObserver(presenter)
         super.onViewCreated(view, savedInstanceState)
     }
 
     override fun onDestroyView() {
         presenter.detachView()
+        lifecycle.removeObserver(presenter)
         super.onDestroyView()
     }
 }

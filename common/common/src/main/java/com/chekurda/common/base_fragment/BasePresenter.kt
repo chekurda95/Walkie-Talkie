@@ -1,10 +1,12 @@
 package com.chekurda.common.base_fragment
 
+import androidx.lifecycle.LifecycleObserver
+
 /**
  * Базовый интерфейс презентера для использования в [BasePresenterFragment].
  * @param VIEW тип вью, которая будет прикрепляться и открепляться от презентера.
  */
-interface BasePresenter<VIEW> {
+interface BasePresenter<VIEW> : LifecycleObserver {
 
     /**
      * Прикрепление вью к презентеру.

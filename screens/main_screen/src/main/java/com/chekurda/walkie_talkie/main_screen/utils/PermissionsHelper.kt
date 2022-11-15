@@ -12,16 +12,16 @@ import androidx.core.content.ContextCompat
  * @property requestCode Код запроса разрешений.
  */
 internal class PermissionsHelper(
+    private val activity: Activity,
     private val permissions: Array<String>,
-    private val requestCode: Int,
-    private val activityProvider: () -> Activity
+    private val requestCode: Int
 ) {
 
     /**
      * Запрос разрешений [permissions].
      */
     fun request() {
-        ActivityCompat.requestPermissions(activityProvider(), permissions, requestCode)
+        ActivityCompat.requestPermissions(activity, permissions, requestCode)
     }
 
     /**
@@ -39,13 +39,13 @@ internal class PermissionsHelper(
         if (checkPermissions(permissions)) {
             action()
         } else {
-            ActivityCompat.requestPermissions(activityProvider(), permissions, requestCode)
+            ActivityCompat.requestPermissions(activity, permissions, requestCode)
         }
     }
 
     private fun checkPermissions(permissions: Array<String>): Boolean {
         permissions.forEach {
-            val hasPermission = ContextCompat.checkSelfPermission(activityProvider(), it) == PackageManager.PERMISSION_GRANTED
+            val hasPermission = ContextCompat.checkSelfPermission(activity, it) == PackageManager.PERMISSION_GRANTED
             if (!hasPermission) return false
         }
         return true
