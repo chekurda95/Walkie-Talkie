@@ -3,23 +3,18 @@ package com.chekurda.walkie_talkie.main_screen.utils
 import android.app.Activity
 import android.content.Context
 import android.media.AudioManager
-import android.os.PowerManager
 
 /**
  * Вспомогательный класс для управления девайсом в процессе записи аудио.
  */
-internal class RecordingDeviceHelper(private val activity: Activity) {
+internal class RecordingDeviceHelper(activity: Activity) {
 
     private val systemAudioManager = activity.getSystemService(Context.AUDIO_SERVICE) as AudioManager
-    private val powerManager = activity.getSystemService(Context.POWER_SERVICE) as PowerManager
 
-    private var wakeLock: PowerManager.WakeLock? = null
     private var hasRecordAudioFocus = false
     private val audioRecordFocusChangedListener = AudioManager.OnAudioFocusChangeListener { focus ->
         if (focus != AudioManager.AUDIOFOCUS_GAIN) hasRecordAudioFocus = false
     }
-
-    private var isConfigured: Boolean = false
 
     /**
      * Настроить девайс для записи аудио/видео.
@@ -33,11 +28,8 @@ internal class RecordingDeviceHelper(private val activity: Activity) {
      * в ином случае настройки вернутся к прежним параметрам.
      */
     fun configureDevice(isStartRecording: Boolean) {
-        if (isConfigured && isStartRecording || !(isConfigured || isStartRecording)) return
-        isConfigured = isStartRecording
         requestBluetoothSco(isStartRecording)
         requestAudioFocus(isStartRecording)
-        requestWakeLock(isStartRecording)
     }
 
     private fun requestBluetoothSco(request: Boolean) = with(systemAudioManager) {
@@ -66,23 +58,4 @@ internal class RecordingDeviceHelper(private val activity: Activity) {
             hasRecordAudioFocus = false
         }
     }
-
-    private fun requestWakeLock(request: Boolean) {
-        try {
-            if (request && wakeLock == null) {
-                wakeLock = powerManager.newWakeLock(
-                    PowerManager.SCREEN_DIM_WAKE_LOCK or PowerManager.ON_AFTER_RELEASE,
-                    AUDIO_RECORD_WAKELOCK_TAG
-                ).also { it.acquire(WAKELOCK_TIMEOUT_MS) }
-            } else {
-                wakeLock?.also {
-                    it.release()
-                    wakeLock = null
-                }
-            }
-        } catch (ignore: Exception) { }
-    }
 }
-
-private const val WAKELOCK_TIMEOUT_MS = 5000 * 60L
-private const val AUDIO_RECORD_WAKELOCK_TAG = "com.chekurda.walkie_talkie.main_screen.utils:AUDIO_RECORD_WAKELOCK"

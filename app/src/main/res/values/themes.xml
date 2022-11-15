@@ -4,7 +4,6 @@
         <item name="colorPrimary">@android:color/holo_orange_dark</item>
         <item name="colorPrimaryDark">@android:color/holo_orange_dark</item>
         <item name="android:windowNoTitle">true</item>
-        <item name="android:windowFullscreen">false</item>
-        <item name="android:statusBarColor">@android:color/transparent</item>
+        <item name="android:statusBarColor">@android:color/darker_gray</item>
     </style>
 </resources>

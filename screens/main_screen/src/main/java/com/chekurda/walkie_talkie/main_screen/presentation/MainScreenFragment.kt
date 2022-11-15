@@ -8,9 +8,7 @@ import android.os.Bundle
 import android.view.MotionEvent
 import android.view.View
 import android.widget.Button
-import android.widget.ProgressBar
 import androidx.fragment.app.Fragment
-import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.chekurda.common.base_fragment.BasePresenterFragment
 import com.chekurda.walkie_talkie.main_screen.R
@@ -19,6 +17,7 @@ import com.chekurda.walkie_talkie.main_screen.data.DeviceInfo
 import com.chekurda.walkie_talkie.main_screen.domain.AudioStreamer
 import com.chekurda.walkie_talkie.main_screen.domain.WifiDirectConnectionManager
 import com.chekurda.walkie_talkie.main_screen.presentation.device_list.DeviceListAdapter
+import com.chekurda.walkie_talkie.main_screen.presentation.views.RecordButtonView
 import com.chekurda.walkie_talkie.main_screen.utils.PermissionsHelper
 import com.chekurda.walkie_talkie.main_screen.utils.RecordingDeviceHelper
 
@@ -33,10 +32,8 @@ internal class MainScreenFragment : BasePresenterFragment<MainScreenContract.Vie
     private val adapter: DeviceListAdapter = DeviceListAdapter { presenter.onDeviceItemClicked(it) }
 
     private var recyclerView: RecyclerView? = null
-    private var progress: ProgressBar? = null
-    private var searchButton: Button? = null
-    private var disconnectButton: Button? = null
-    private var sayButton: Button? = null
+    private var connectButton: Button? = null
+    private var recordButton: RecordButtonView? = null
 
     private var permissionsHelper: PermissionsHelper? = null
     private var deviceHelper: RecordingDeviceHelper? = null
@@ -55,18 +52,20 @@ internal class MainScreenFragment : BasePresenterFragment<MainScreenContract.Vie
 
     @SuppressLint("ClickableViewAccessibility")
     private fun initViews(view: View) {
-        progress = view.findViewById(R.id.search_progress)
-        recyclerView = view.findViewById<RecyclerView>(R.id.device_list).apply {
+        /*recyclerView = view.findViewById<RecyclerView>(R.id.device_list).apply {
             layoutManager = LinearLayoutManager(requireContext())
             adapter = this@MainScreenFragment.adapter
+        }*/
+        connectButton = view.findViewById<Button?>(R.id.connect_button).apply {
+            setOnClickListener {
+                if (true) {
+                    presenter.onConnectClicked()
+                } else {
+                    presenter.onDisconnectClicked()
+                }
+            }
         }
-        disconnectButton = view.findViewById<Button?>(R.id.disconnect_button).apply {
-            setOnClickListener { presenter.onDisconnectClicked() }
-        }
-        searchButton = view.findViewById<Button?>(R.id.search_button).apply {
-            setOnClickListener { presenter.onConnectClicked() }
-        }
-        sayButton = view.findViewById<Button?>(R.id.say_button).apply {
+        recordButton = view.findViewById<RecordButtonView>(R.id.record_button).apply {
             setOnTouchListener { _, event ->
                 when (event.action) {
                     MotionEvent.ACTION_DOWN -> presenter.onVoiceButtonStateChanged(isPressed = true)
@@ -91,10 +90,8 @@ internal class MainScreenFragment : BasePresenterFragment<MainScreenContract.Vie
     override fun onDestroyView() {
         super.onDestroyView()
         recyclerView = null
-        progress = null
-        searchButton = null
-        disconnectButton = null
-        sayButton = null
+        connectButton = null
+        recordButton = null
     }
 
     override fun onDetach() {
