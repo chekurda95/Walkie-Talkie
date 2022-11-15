@@ -1,6 +1,5 @@
-package com.chekurda.walkie_talkie.main_screen.presentation.views
+package com.chekurda.walkie_talkie.main_screen.presentation.views.drawables
 
-import android.annotation.SuppressLint
 import android.content.Context
 import android.graphics.Bitmap
 import android.graphics.Canvas
@@ -9,7 +8,6 @@ import android.graphics.Paint
 import android.graphics.drawable.ColorDrawable
 import android.os.Handler
 import android.os.Looper
-import android.os.Message
 import android.os.SystemClock
 import android.util.Log
 import android.view.View
@@ -84,9 +82,6 @@ internal class BlurBehindDrawable(
         }
         if (bitmap != null) {
             emptyPaint.alpha = (255 * alpha).toInt()
-            if (type == 1) {
-                canvas.translate(0f, panTranslationY)
-            }
             canvas.save()
             canvas.scale(
                 parentView!!.measuredWidth / bitmap[1]!!.width.toFloat(), parentView.measuredHeight / bitmap[1]!!
@@ -95,9 +90,7 @@ internal class BlurBehindDrawable(
             canvas.drawBitmap(bitmap[1]!!, 0f, 0f, emptyPaint)
             canvas.restore()
             canvas.save()
-            if (type == 0) {
-                canvas.translate(0f, panTranslationY)
-            }
+            canvas.translate(0f, panTranslationY)
             canvas.scale(
                 parentView.measuredWidth / bitmap[0]!!.width.toFloat(), toolbarH / bitmap[0]!!
                     .height.toFloat()
@@ -153,7 +146,7 @@ internal class BlurBehindDrawable(
                     blurCanvas!![i]!!.translate(0f, -panTranslationY)
                     behindView.draw(blurCanvas!![i])
                 }
-                if (backDrawable != null && i == ADJUST_PAN_TRANSLATION_CONTENT) {
+                if (i == ADJUST_PAN_TRANSLATION_CONTENT) {
                     val oldBounds = backDrawable.bounds
                     backDrawable.setBounds(0, 0, behindView.measuredWidth, behindView.measuredHeight)
                     backDrawable.draw(blurCanvas!![i]!!)
@@ -179,7 +172,7 @@ internal class BlurBehindDrawable(
     }
 
     private val blurRadius: Int
-        private get() = max(7, max(lastH, lastW) / 180)
+        get() = max(7, max(lastH, lastW) / 180)
 
     fun clear() {
         invalidate = true
@@ -235,7 +228,7 @@ internal class BlurBehindDrawable(
             return
         }
         generateBlurredBitmaps()
-        lastH = parentView!!.measuredHeight
+        lastH = parentView.measuredHeight
         lastW = parentView.measuredWidth
     }
 
@@ -397,51 +390,18 @@ internal class BlurBehindDrawable(
     }
 }
 
-class DispatchQueue @JvmOverloads constructor(threadName: String, start: Boolean = true) : Thread() {
+private class DispatchQueue @JvmOverloads constructor(threadName: String, start: Boolean = true) : Thread() {
 
     @Volatile
     private var handler: Handler? = null
     private val syncLatch = CountDownLatch(1)
     var lastTaskTime: Long = 0
         private set
-    val index = indexPointer++
 
     init {
         name = threadName
         if (start) {
             start()
-        }
-    }
-
-    fun sendMessage(msg: Message?, delay: Int) {
-        try {
-            syncLatch.await()
-            if (delay <= 0) {
-                handler!!.sendMessage(msg!!)
-            } else {
-                handler!!.sendMessageDelayed(msg!!, delay.toLong())
-            }
-        } catch (ignore: Exception) {
-        }
-    }
-
-    fun cancelRunnable(runnable: Runnable?) {
-        try {
-            syncLatch.await()
-            handler!!.removeCallbacks(runnable!!)
-        } catch (e: Exception) {
-            Log.e("TAGTAG", "", e)
-        }
-    }
-
-    fun cancelRunnables(runnables: Array<Runnable?>) {
-        try {
-            syncLatch.await()
-            for (i in runnables.indices) {
-                handler!!.removeCallbacks(runnables[i]!!)
-            }
-        } catch (e: Exception) {
-            Log.e("TAGTAG", "", e)
         }
     }
 
@@ -453,9 +413,7 @@ class DispatchQueue @JvmOverloads constructor(threadName: String, start: Boolean
     fun postRunnable(runnable: Runnable?, delay: Long): Boolean {
         try {
             syncLatch.await()
-        } catch (e: Exception) {
-            Log.e("TAGTAG", "", e)
-        }
+        } catch (e: Exception) { }
         return if (delay <= 0) {
             handler!!.post(runnable!!)
         } else {
@@ -467,30 +425,18 @@ class DispatchQueue @JvmOverloads constructor(threadName: String, start: Boolean
         try {
             syncLatch.await()
             handler!!.removeCallbacksAndMessages(null)
-        } catch (e: Exception) {
-            Log.e("TAGTAG", "", e)
-        }
+        } catch (e: Exception) { }
     }
 
-    fun handleMessage(inputMessage: Message?) {}
     fun recycle() {
         handler!!.looper.quit()
     }
 
     override fun run() {
         Looper.prepare()
-        handler = @SuppressLint("HandlerLeak")
-        object : Handler() {
-            override fun handleMessage(msg: Message) {
-                this@DispatchQueue.handleMessage(msg)
-            }
-        }
+        handler = Handler()
         syncLatch.countDown()
         Looper.loop()
-    }
-
-    companion object {
-        private var indexPointer = 0
     }
 }
 
