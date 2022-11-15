@@ -1,4 +1,4 @@
-package com.chekurda.main_screen.contact
+package com.chekurda.walkie_talkie.main_screen.contact
 
 import androidx.fragment.app.Fragment
 import com.chekurda.common.plugin_struct.Feature

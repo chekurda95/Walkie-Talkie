@@ -1,7 +1,7 @@
 package com.chekurda.walkie_talkie
 
 import com.chekurda.common.plugin_struct.*
-import com.chekurda.main_screen.contact.MainScreenFragmentFactory
+import com.chekurda.walkie_talkie.main_screen.contact.MainScreenFragmentFactory
 
 object AppPlugin : BasePlugin<Unit>() {
 

@@ -1,4 +1,4 @@
-package com.chekurda.main_screen.presentation.device_list.holder
+package com.chekurda.walkie_talkie.main_screen.presentation.device_list.holder
 
 import android.content.Context
 import android.graphics.Canvas
@@ -10,7 +10,7 @@ import com.chekurda.design.custom_view_tools.utils.MeasureSpecUtils.measureDirec
 import com.chekurda.design.custom_view_tools.utils.SimpleTextPaint
 import com.chekurda.design.custom_view_tools.utils.dp
 import com.chekurda.design.custom_view_tools.utils.safeRequestLayout
-import com.chekurda.main_screen.data.DeviceInfo
+import com.chekurda.walkie_talkie.main_screen.data.DeviceInfo
 
 internal class DeviceItemView(context: Context) : View(context) {
 

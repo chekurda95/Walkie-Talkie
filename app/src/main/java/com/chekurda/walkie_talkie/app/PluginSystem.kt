@@ -3,7 +3,7 @@ package com.chekurda.walkie_talkie.app
 import android.app.Application
 import com.chekurda.common.plugin_manager.PluginManager
 import com.chekurda.common.plugin_struct.Plugin
-import com.chekurda.main_screen.MainScreenPlugin
+import com.chekurda.walkie_talkie.main_screen.MainScreenPlugin
 import com.chekurda.walkie_talkie.AppPlugin
 
 /**

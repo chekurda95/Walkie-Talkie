@@ -1,4 +1,4 @@
-package com.chekurda.main_screen.data
+package com.chekurda.walkie_talkie.main_screen.data
 
 import com.chekurda.common.base_list.ComparableItem
 

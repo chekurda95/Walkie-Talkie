@@ -1,4 +1,4 @@
-package com.chekurda.main_screen.utils
+package com.chekurda.walkie_talkie.main_screen.utils
 
 import android.app.Activity
 import android.content.pm.PackageManager

@@ -1,4 +1,4 @@
-package com.chekurda.main_screen.presentation
+package com.chekurda.walkie_talkie.main_screen.presentation
 
 import com.chekurda.common.base_fragment.BasePresenter
 

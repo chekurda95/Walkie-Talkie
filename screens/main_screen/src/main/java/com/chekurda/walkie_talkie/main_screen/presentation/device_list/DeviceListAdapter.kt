@@ -1,10 +1,10 @@
-package com.chekurda.main_screen.presentation.device_list
+package com.chekurda.walkie_talkie.main_screen.presentation.device_list
 
 import android.view.ViewGroup
 import androidx.recyclerview.widget.RecyclerView
 import com.chekurda.common.base_list.calculateDiff
-import com.chekurda.main_screen.data.DeviceInfo
-import com.chekurda.main_screen.presentation.device_list.holder.DeviceViewHolder
+import com.chekurda.walkie_talkie.main_screen.data.DeviceInfo
+import com.chekurda.walkie_talkie.main_screen.presentation.device_list.holder.DeviceViewHolder
 
 internal class DeviceListAdapter(
     private val holderActionListener: DeviceViewHolder.ActionListener

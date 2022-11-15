@@ -1,11 +1,11 @@
-package com.chekurda.main_screen
+package com.chekurda.walkie_talkie.main_screen
 
 import com.chekurda.common.plugin_struct.BasePlugin
 import com.chekurda.common.plugin_struct.Dependency
 import com.chekurda.common.plugin_struct.Feature
 import com.chekurda.common.plugin_struct.FeatureWrapper
-import com.chekurda.main_screen.contact.MainScreenFragmentFactory
-import com.chekurda.main_screen.presentation.MainScreenFragment
+import com.chekurda.walkie_talkie.main_screen.contact.MainScreenFragmentFactory
+import com.chekurda.walkie_talkie.main_screen.presentation.MainScreenFragment
 
 object MainScreenPlugin : BasePlugin<Unit>() {
 

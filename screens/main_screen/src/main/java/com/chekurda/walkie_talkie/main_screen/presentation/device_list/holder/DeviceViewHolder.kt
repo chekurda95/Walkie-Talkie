@@ -1,8 +1,8 @@
-package com.chekurda.main_screen.presentation.device_list.holder
+package com.chekurda.walkie_talkie.main_screen.presentation.device_list.holder
 
 import android.content.Context
 import androidx.recyclerview.widget.RecyclerView
-import com.chekurda.main_screen.data.DeviceInfo
+import com.chekurda.walkie_talkie.main_screen.data.DeviceInfo
 
 internal class DeviceViewHolder private constructor(
     private val view: DeviceItemView,
