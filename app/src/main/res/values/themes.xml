@@ -1,9 +1,11 @@
-<resources>
+<resources xmlns:tools="http://schemas.android.com/tools">
     <!-- Base application theme. -->
     <style name="AppTheme" parent="Theme.AppCompat.Light.NoActionBar">
-        <item name="colorPrimary">@android:color/holo_orange_dark</item>
-        <item name="colorPrimaryDark">@android:color/holo_orange_dark</item>
-        <item name="android:windowNoTitle">true</item>
-        <item name="android:statusBarColor">@android:color/darker_gray</item>
+        <item name="colorPrimary">@color/main_background_color</item>
+        <item name="colorPrimaryDark">@color/main_background_color</item>
+        <item name="android:windowBackground">?colorPrimary</item>
+        <item name="android:statusBarColor">?colorPrimary</item>
+        <item name="android:navigationBarColor">?colorPrimary</item>
+        <item name="android:forceDarkAllowed" tools:targetApi="q">false</item>
     </style>
 </resources>
