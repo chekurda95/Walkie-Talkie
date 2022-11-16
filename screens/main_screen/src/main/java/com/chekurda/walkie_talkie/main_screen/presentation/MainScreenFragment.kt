@@ -16,8 +16,9 @@ import com.chekurda.walkie_talkie.main_screen.contact.MainScreenFragmentFactory
 import com.chekurda.walkie_talkie.main_screen.data.DeviceInfo
 import com.chekurda.walkie_talkie.main_screen.domain.AudioStreamer
 import com.chekurda.walkie_talkie.main_screen.domain.WifiDirectConnectionManager
-import com.chekurda.walkie_talkie.main_screen.presentation.device_list.DeviceListAdapter
+import com.chekurda.walkie_talkie.main_screen.presentation.views.device_picker.DeviceListAdapter
 import com.chekurda.walkie_talkie.main_screen.presentation.views.RecordButtonView
+import com.chekurda.walkie_talkie.main_screen.presentation.views.device_picker.DevicePickerView
 import com.chekurda.walkie_talkie.main_screen.utils.PermissionsHelper
 import com.chekurda.walkie_talkie.main_screen.utils.RecordingDeviceHelper
 
@@ -34,6 +35,7 @@ internal class MainScreenFragment : BasePresenterFragment<MainScreenContract.Vie
     private var recyclerView: RecyclerView? = null
     private var connectButton: Button? = null
     private var recordButton: RecordButtonView? = null
+    private var devicePicker: DevicePickerView? = null
 
     private var permissionsHelper: PermissionsHelper? = null
     private var deviceHelper: RecordingDeviceHelper? = null
@@ -52,10 +54,7 @@ internal class MainScreenFragment : BasePresenterFragment<MainScreenContract.Vie
 
     @SuppressLint("ClickableViewAccessibility")
     private fun initViews(view: View) {
-        /*recyclerView = view.findViewById<RecyclerView>(R.id.device_list).apply {
-            layoutManager = LinearLayoutManager(requireContext())
-            adapter = this@MainScreenFragment.adapter
-        }*/
+        devicePicker = view.findViewById(R.id.device_picker)
         connectButton = view.findViewById<Button?>(R.id.connect_button).apply {
             setOnClickListener {
                 if (true) {
@@ -80,6 +79,11 @@ internal class MainScreenFragment : BasePresenterFragment<MainScreenContract.Vie
     override fun onStart() {
         super.onStart()
         deviceHelper?.configureDevice(isStartRecording = true)
+        permissionsHelper?.request()
+    }
+
+    override fun onResume() {
+        super.onResume()
     }
 
     override fun onStop() {
@@ -92,6 +96,7 @@ internal class MainScreenFragment : BasePresenterFragment<MainScreenContract.Vie
         recyclerView = null
         connectButton = null
         recordButton = null
+        devicePicker = null
     }
 
     override fun onDetach() {
@@ -101,11 +106,11 @@ internal class MainScreenFragment : BasePresenterFragment<MainScreenContract.Vie
     }
 
     override fun changeDeviceListVisibility(isVisible: Boolean) {
-        TODO("Показать View списка девайсов.")
+        devicePicker?.show()
     }
 
     override fun updateDeviceList(deviceInfoList: List<DeviceInfo>) {
-        TODO("Обновить список девайсов.")
+        devicePicker?.updateDeviceList(deviceInfoList)
     }
 
     override fun showConnectedState(connectedDevice: DeviceInfo) {
@@ -142,8 +147,6 @@ internal class MainScreenFragment : BasePresenterFragment<MainScreenContract.Vie
 
 private val permissions = arrayOf(
     Manifest.permission.RECORD_AUDIO,
-    Manifest.permission.BLUETOOTH,
-    Manifest.permission.BLUETOOTH_ADMIN,
     Manifest.permission.ACCESS_FINE_LOCATION,
     Manifest.permission.ACCESS_COARSE_LOCATION
 )

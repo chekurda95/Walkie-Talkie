@@ -13,7 +13,6 @@ import android.net.wifi.p2p.WifiP2pDevice
 import android.net.wifi.p2p.WifiP2pInfo
 import android.net.wifi.p2p.WifiP2pManager
 import com.chekurda.common.storeIn
-import io.reactivex.Completable
 import io.reactivex.Observable
 import io.reactivex.Single
 import io.reactivex.android.schedulers.AndroidSchedulers
@@ -77,11 +76,13 @@ internal class WifiDirectConnectionManager(
         this.channel = null
     }
 
-    fun searchDevices(): Completable =
+    fun searchDevices() {
         Observable.timer(SEARCH_DEVICES_TIMEOUT_SEC, TimeUnit.SECONDS)
+            .observeOn(AndroidSchedulers.mainThread())
             .doOnSubscribe { checkNotNull(manager).discoverPeers(channel, emptyManagerListener) }
-            .doOnComplete { checkNotNull(manager).stopPeerDiscovery(channel, emptyManagerListener) }
-            .ignoreElements()
+            .subscribe{ checkNotNull(manager).stopPeerDiscovery(channel, emptyManagerListener) }
+            .storeIn(disposer)
+    }
 
     fun connect(address: String) {
         checkNotNull(manager).connect(

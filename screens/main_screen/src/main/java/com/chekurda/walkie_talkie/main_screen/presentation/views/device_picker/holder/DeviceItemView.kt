@@ -1,4 +1,4 @@
-package com.chekurda.walkie_talkie.main_screen.presentation.device_list.holder
+package com.chekurda.walkie_talkie.main_screen.presentation.views.device_picker.holder
 
 import android.content.Context
 import android.graphics.Canvas

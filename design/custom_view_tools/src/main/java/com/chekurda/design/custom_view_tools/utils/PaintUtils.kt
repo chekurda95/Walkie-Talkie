@@ -6,20 +6,6 @@ import androidx.annotation.Px
 import kotlin.math.ceil
 
 /**
- * Получить ширину текста для данного [TextPaint].
- */
-@Px
-fun TextPaint.getTextWidth(text: CharSequence): Int =
-    measureText(text, 0, text.length).toInt()
-
-/**
- * Получить высоту одной строчки текста для данного [TextPaint].
- */
-@get:Px
-val TextPaint.textHeight: Int
-    get() = ceil(fontMetrics.descent - fontMetrics.ascent).toInt()
-
-/**
  * Обычный anti-alias [Paint] с возможностью настройки прямо в конструкторе.
  * Несколько упрощает синтаксис создания обычного Paint.
  */

@@ -3,7 +3,7 @@
  */
 package com.chekurda.design.custom_view_tools.utils
 
-import android.content.Context
+import android.content.res.Resources
 import android.text.TextPaint
 import android.view.View
 import androidx.annotation.FloatRange
@@ -28,19 +28,71 @@ fun View.safeRequestLayout() {
 }
 
 /**
- * Получить значение в пикселях по переданному значению в dp,
- * округленное до целого числа (по правилам округления).
+ * Разместить View на координате [x] [y] (левый верхний угол View) с рассчитанными размерами в [View.onMeasure].
  */
-@Px
-fun Context.dp(@FloatRange(from = 0.0) value: Float): Int =
-    (resources.displayMetrics.density * value).mathRoundToInt()
+fun View.layout(x: Int, y: Int) {
+    layout(x, y, x + measuredWidth, y + measuredHeight)
+}
+
+/**
+ * Безопасно выполнить действие, обращая внимание на текущую видимость View:
+ * если [View.getVisibility] == [View.GONE] - действие не будет выполнено.
+ * Данный подход необходим для предотвращения лишних measure и опеределений высоты View,
+ * в случае, если она полностью скрыта.
+ *
+ * @see safeMeasuredWidth
+ * @see safeMeasuredHeight
+ * @see safeMeasure
+ * @see safeLayout
+ */
+inline fun <T> View.safeVisibility(action: () -> T): T? =
+    if (visibility != View.GONE) action() else null
+
+/**
+ * Безопасно получить измеренную ширину View [View.getMeasuredWidth] c учетом ее текущей видимости.
+ * @see safeVisibility
+ */
+inline val View.safeMeasuredWidth: Int
+    get() = safeVisibility { measuredWidth } ?: 0
+
+/**
+ * Безопасно получить измеренную высоту View [View.getMeasuredHeight] c учетом ее текущей видимости.
+ * @see safeVisibility
+ */
+inline val View.safeMeasuredHeight: Int
+    get() = safeVisibility { measuredHeight } ?: 0
+
+/**
+ * Безопасно измерить View [View.measure] c учетом ее текущей видимости.
+ * @see safeVisibility
+ */
+fun View.safeMeasure(widthMeasureSpec: Int, heightMeasureSpec: Int) {
+    safeVisibility { measure(widthMeasureSpec, heightMeasureSpec) }
+}
+
+/**
+ * Безопасно разместить View [View.layout] c учетом ее текущей видимости.
+ * @see safeVisibility
+ */
+fun View.safeLayout(left: Int, top: Int) {
+    safeVisibility { layout(left, top) }
+        ?: layout(left, top, left, top)
+}
 
 /**
  * Получить значение в пикселях по переданному значению в dp,
  * округленное до целого числа (по правилам округления).
  */
 @Px
-fun Context.dp(@IntRange(from = 0) value: Int): Int =
+fun Resources.dp(@FloatRange(from = 0.0) value: Float): Int =
+    (displayMetrics.density * value).mathRoundToInt()
+
+/**
+ * Получить значение в пикселях по переданному значению в dp,
+ * округленное до целого числа (по правилам округления).
+ */
+@Px
+fun Resources.dp(@IntRange(from = 0) value: Int): Int =
     dp(value.toFloat())
 
 /**
@@ -48,15 +100,15 @@ fun Context.dp(@IntRange(from = 0) value: Int): Int =
  * округленное до целого числа (по правилам округления).
  */
 @Px
-fun Context.sp(@FloatRange(from = 0.0) value: Float): Int =
-    (resources.displayMetrics.scaledDensity * value).mathRoundToInt()
+fun Resources.sp(@FloatRange(from = 0.0) value: Float): Int =
+    (displayMetrics.scaledDensity * value).mathRoundToInt()
 
 /**
  * Получить значение в пикселях по переданному значению в sp,
  * округленное до целого числа (по правилам округления).
  */
 @Px
-fun Context.sp(@IntRange(from = 0) value: Int): Int =
+fun Resources.sp(@IntRange(from = 0) value: Int): Int =
     sp(value.toFloat())
 
 /**
@@ -65,7 +117,7 @@ fun Context.sp(@IntRange(from = 0) value: Int): Int =
  */
 @Px
 fun View.dp(@FloatRange(from = 0.0) value: Float): Int =
-    context.dp(value)
+    resources.dp(value)
 
 /**
  * Получить значение в пикселях по переданному значению в dp,
@@ -73,7 +125,7 @@ fun View.dp(@FloatRange(from = 0.0) value: Float): Int =
  */
 @Px
 fun View.dp(@IntRange(from = 0) value: Int): Int =
-    context.dp(value.toFloat())
+    dp(value.toFloat())
 
 /**
  * Получить значение в пикселях по переданному значению в sp,
@@ -81,7 +133,7 @@ fun View.dp(@IntRange(from = 0) value: Int): Int =
  */
 @Px
 fun View.sp(@FloatRange(from = 0.0) value: Float): Int =
-    context.sp(value)
+    resources.sp(value)
 
 /**
  * Получить значение в пикселях по переданному значению в sp,
@@ -89,7 +141,21 @@ fun View.sp(@FloatRange(from = 0.0) value: Float): Int =
  */
 @Px
 fun View.sp(@IntRange(from = 0) value: Int): Int =
-    context.sp(value)
+    sp(value.toFloat())
+
+/**
+ * Получить ширину текста для данного [TextPaint].
+ */
+@Px
+fun TextPaint.getTextWidth(text: CharSequence): Int =
+    measureText(text, 0, text.length).toInt()
+
+/**
+ * Получить высоту одной строчки текста для данного [TextPaint].
+ */
+@get:Px
+val TextPaint.textHeight: Int
+    get() = ceil(fontMetrics.descent - fontMetrics.ascent).toInt()
 
 /**
  * Метод для правильного математического округления дробных чисел по модулю.

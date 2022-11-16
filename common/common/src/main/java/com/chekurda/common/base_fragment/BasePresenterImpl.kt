@@ -20,13 +20,13 @@ abstract class BasePresenterImpl<VIEW> : BasePresenter<VIEW>, LifecycleObserver 
     }
 
     @OnLifecycleEvent(Lifecycle.Event.ON_START)
-    protected open fun viewIsStarted() = Unit
+    open fun viewIsStarted() = Unit
     @OnLifecycleEvent(Lifecycle.Event.ON_RESUME)
-    protected open fun viewIsResumed() = Unit
+    open fun viewIsResumed() = Unit
     @OnLifecycleEvent(Lifecycle.Event.ON_PAUSE)
-    protected open fun viewIsPaused() = Unit
+    open fun viewIsPaused() = Unit
     @OnLifecycleEvent(Lifecycle.Event.ON_STOP)
-    protected open fun viewIsStopped() = Unit
+    open fun viewIsStopped() = Unit
 
     override fun onDestroy() = Unit
 }

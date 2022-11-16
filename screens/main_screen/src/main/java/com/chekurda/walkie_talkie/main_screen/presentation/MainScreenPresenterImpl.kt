@@ -28,12 +28,14 @@ internal class MainScreenPresenterImpl(
     override fun attachView(view: MainScreenContract.View) {
         super.attachView(view)
         wifiDirectManager.init(view.provideActivity())
+
     }
 
     override fun detachView() {
         super.detachView()
         wifiDirectManager.clear()
         connectedDevice = null
+
     }
 
     override fun viewIsResumed() {

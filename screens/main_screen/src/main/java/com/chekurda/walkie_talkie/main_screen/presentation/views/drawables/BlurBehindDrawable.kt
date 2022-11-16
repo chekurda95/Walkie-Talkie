@@ -18,9 +18,10 @@ import kotlin.math.max
 import kotlin.math.min
 
 internal class BlurBehindDrawable(
-    private val behindView: View,
-    private val parentView: View?
+    private val parentView: View? = null,
+    private val behindViewProvider: () -> View
 ) {
+    private val behindView: View by lazy { behindViewProvider() }
     private var queue: DispatchQueue? = null
     private var blurredBitmapTmp: Array<Bitmap?>? = null
     private var backgroundBitmap: Array<Bitmap?>? = null
@@ -112,7 +113,7 @@ internal class BlurBehindDrawable(
                 if (blurredBitmapTmp!![i] == null || parentView!!.measuredWidth != lastW || parentView.measuredHeight != lastH) {
                     val lastH = parentView!!.measuredHeight
                     val lastW = parentView.measuredWidth
-                    toolbarH = getStatusBarHeight(behindView.context)// + behindView.dp(200)
+                    toolbarH = getStatusBarHeight(behindView.context) + behindView.dp(200)
                     try {
                         val h = if (i == 0) toolbarH else lastH
                         blurredBitmapTmp!![i] = Bitmap.createBitmap(
@@ -248,7 +249,7 @@ internal class BlurBehindDrawable(
         for (i in 0..1) {
             val lastH = parentView!!.measuredHeight
             val lastW = parentView.measuredWidth
-            toolbarH = getStatusBarHeight(behindView.context) + behindView.context.dp(200)
+            toolbarH = getStatusBarHeight(behindView.context) + behindView.resources.dp(200)
             val h = if (i == 0) toolbarH else lastH
             if (bitmap!![i] == null || bitmap[i]!!.height != h || bitmap[i]!!.width != parentView.measuredWidth) {
                 if (queue != null) {
