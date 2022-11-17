@@ -50,8 +50,6 @@ internal class AmplitudeDrawable(private val paint: Paint) : Drawable() {
     private val pulsationInterpolator = AccelerateDecelerateInterpolator()
     private var pulseStableAmplitude = 0f
     private var isRunning: Boolean = false
-    private var originAlpha = 0
-    private var hideAnimator: ValueAnimator? = null
 
     var animatedAmplitude = 0f
         private set
@@ -76,37 +74,12 @@ internal class AmplitudeDrawable(private val paint: Paint) : Drawable() {
         isPulseGrowing = true
         animatePulsation = false
         isRunning = false
-        if (hideAnimator != null) {
-            paint.alpha = originAlpha
-            hideAnimator?.cancel()
-            hideAnimator = null
-        }
         setVisible(true, false)
-    }
-
-    fun hide(durationMs: Long) {
-        hideAnimator?.cancel()
-        originAlpha = paint.alpha
-        isRunning = false
-        hideAnimator = ValueAnimator.ofFloat(0f, 1f).apply {
-            duration = durationMs
-            interpolator = AccelerateInterpolator()
-            addUpdateListener {
-                if (!isVisible) return@addUpdateListener
-                paint.alpha = ((1f - it.animatedFraction) * originAlpha).toInt()
-                invalidateSelf()
-            }
-            start()
-        }
     }
 
     fun setColor(@ColorInt color: Int, alpha: Int) {
         paint.color = color
-        if (hideAnimator == null) {
-            paint.alpha = alpha
-        } else {
-            originAlpha = alpha
-        }
+        paint.alpha = alpha
     }
 
     override fun draw(canvas: Canvas) {
@@ -164,7 +137,7 @@ internal class AmplitudeDrawable(private val paint: Paint) : Drawable() {
         if (amplitude == animatedAmplitude) return
         animatedAmplitude += amplitudeChangingSpeed * dt
         val isSoBig = amplitudeChangingSpeed > 0 && animatedAmplitude > amplitude
-        val isSoSmall = amplitudeChangingSpeed > 0 && animatedAmplitude > amplitude
+        val isSoSmall = amplitudeChangingSpeed < 0 && animatedAmplitude < amplitude
         if (isSoBig || isSoSmall) {
             animatedAmplitude = amplitude
         }

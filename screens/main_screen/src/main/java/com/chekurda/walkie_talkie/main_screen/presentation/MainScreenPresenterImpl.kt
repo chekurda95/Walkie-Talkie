@@ -17,6 +17,7 @@ internal class MainScreenPresenterImpl(
     private var deviceInfoList: List<DeviceInfo> = emptyList()
     private var isConnected: Boolean = false
     private var hasPermissions: Boolean = false
+    private var isListening: Boolean = true
 
     init {
         wifiDirectManager.apply {
@@ -77,7 +78,6 @@ internal class MainScreenPresenterImpl(
 
     override fun onVoiceButtonStateChanged(isPressed: Boolean) {
         wifiDirectManager.changeSteamDirection(isListening = !isPressed)
-        if (!isPressed) view?.onOutputAmplitudeChanged(0f)
     }
 
     override fun onPeersChanged(devices: List<WifiP2pDevice>) {
@@ -98,7 +98,6 @@ internal class MainScreenPresenterImpl(
     }
 
     override fun onConnectionCanceled(isError: Boolean) {
-        this.isConnected = false
         if (isError) {
             view?.showConnectionError()
         } else {

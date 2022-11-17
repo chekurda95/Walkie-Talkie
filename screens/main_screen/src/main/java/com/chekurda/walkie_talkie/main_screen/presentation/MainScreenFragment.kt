@@ -69,11 +69,17 @@ internal class MainScreenFragment : BasePresenterFragment<MainScreenContract.Vie
         recordButton = view.findViewById<RecordButtonView>(R.id.record_button).apply {
             setOnTouchListener { _, event ->
                 when (event.action) {
-                    MotionEvent.ACTION_DOWN -> presenter.onVoiceButtonStateChanged(isPressed = true)
+                    MotionEvent.ACTION_DOWN -> {
+                        view.isPressed = true
+                        presenter.onVoiceButtonStateChanged(isPressed = true)
+                    }
                     MotionEvent.ACTION_CANCEL,
-                    MotionEvent.ACTION_UP -> presenter.onVoiceButtonStateChanged(isPressed = false)
+                    MotionEvent.ACTION_UP -> {
+                        view.isPressed = false
+                        presenter.onVoiceButtonStateChanged(isPressed = false)
+                    }
                 }
-                false
+                true
             }
         }
     }
@@ -147,7 +153,9 @@ internal class MainScreenFragment : BasePresenterFragment<MainScreenContract.Vie
     }
 
     override fun onOutputAmplitudeChanged(amplitude: Float) {
-        view?.post { recordButton?.amplitude = amplitude }
+        view?.post {
+            recordButton?.amplitude = amplitude.takeIf { recordButton?.isPressed == true } ?: 0f
+        }
     }
 
     override fun provideActivity(): Activity = requireActivity()

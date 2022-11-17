@@ -10,6 +10,7 @@ import androidx.annotation.WorkerThread
 import java.net.Socket
 import java.nio.BufferUnderflowException
 import java.nio.ByteBuffer
+import java.nio.ByteOrder
 import kotlin.math.sqrt
 
 internal class AudioStreamer {
@@ -93,8 +94,8 @@ internal class AudioStreamer {
             override fun run() {
                 super.run()
                 val byteArray = ByteArray(minBufferSize)
-                val inputStream = socket.getInputStream()
                 kotlin.runCatching {
+                    val inputStream = socket.getInputStream()
                     while (isConnected) {
                         if (inputStream.available() == 0) continue
                         if (isListening) {
@@ -114,11 +115,11 @@ internal class AudioStreamer {
             override fun run() {
                 super.run()
                 val byteArray = ByteArray(minBufferSize)
-                val outputStream = socket.getOutputStream()
                 kotlin.runCatching {
+                    val outputStream = socket.getOutputStream()
                     while (isConnected) {
                         if (!isListening) {
-                            recorder!!.read(byteArray, 0, byteArray.size)
+                            val length = recorder!!.read(byteArray, 0, byteArray.size)
                             outputStream.write(byteArray)
                             amplitudeListener?.onOutputAmplitudeChanged(getAmplitude(byteArray, byteArray.size))
                         }
@@ -130,7 +131,7 @@ internal class AudioStreamer {
         }.apply { priority = Thread.MAX_PRIORITY }
 
     private fun getAmplitude(byteArray: ByteArray, length: Int): Float {
-        val buffer = ByteBuffer.wrap(byteArray)
+        val buffer = ByteBuffer.wrap(byteArray).apply { order(ByteOrder.nativeOrder()) }
         var sum = 0.0f
         try {
             repeat(length / 2) {

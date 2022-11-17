@@ -21,6 +21,8 @@ import io.reactivex.android.schedulers.AndroidSchedulers
 import io.reactivex.disposables.CompositeDisposable
 import io.reactivex.disposables.SerialDisposable
 import io.reactivex.schedulers.Schedulers
+import java.lang.IllegalStateException
+import java.net.ConnectException
 import java.net.InetSocketAddress
 import java.net.ServerSocket
 import java.net.Socket
@@ -107,6 +109,9 @@ internal class WifiDirectConnectionManager(
     }
 
     fun connect(address: String) {
+        Log.e("TAGTAG", "try connect address $address")
+        prepareSocketDisposable.set(null)
+        connectDisposable.set(null)
         Observable.timer(CONNECTION_WAITING_TIMEOUT_SEC, TimeUnit.SECONDS)
             .observeOn(AndroidSchedulers.mainThread())
             .doOnSubscribe {
@@ -118,7 +123,7 @@ internal class WifiDirectConnectionManager(
                     },
                     object : ActionListener {
                         override fun onSuccess() {
-                            prepareSocketDisposable.set(null)
+                            connectDisposable.set(null)
                         }
                         override fun onFailure(reason: Int) {
                             connectDisposable.set(null)
@@ -147,7 +152,7 @@ internal class WifiDirectConnectionManager(
             }
         }
         manager?.removeGroup(channel, callback)
-        manager?.cancelConnect(channel, emptyManagerListener)
+        manager?.clearLocalServices(channel, emptyManagerListener)
     }
 
     fun registerDirectListener(context: Context) {
@@ -185,7 +190,8 @@ internal class WifiDirectConnectionManager(
                 socket?.close()
                 serverSocket?.close()
             }
-            checkNotNull(socket)
+            if (socket == null) throw IllegalStateException()
+            socket
         }.subscribeOn(Schedulers.io())
             .observeOn(AndroidSchedulers.mainThread())
             .subscribe(::onConnected) {
@@ -211,6 +217,7 @@ internal class WifiDirectConnectionManager(
 
     private fun onDisconnected(isError: Boolean) {
         Log.e("TAGTAG", "onDisconnected isError = $isError")
+        prepareSocketDisposable.set(null)
         isConnected = false
         isGroupConnected = false
         connectedDeviceAddress = null
@@ -259,6 +266,6 @@ private val emptyManagerListener = object : ActionListener {
 }
 
 private const val CONNECTION_WAITING_TIMEOUT_SEC = 25L
-private const val CONNECTION_PORT = 6436
+private const val CONNECTION_PORT = 6542
 private const val BACKLOG = 50
-private const val CONNECTION_TIMEOUT = 5000
+private const val CONNECTION_TIMEOUT = 30000
