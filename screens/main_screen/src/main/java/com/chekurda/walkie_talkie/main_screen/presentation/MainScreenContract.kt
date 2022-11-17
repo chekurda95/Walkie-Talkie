@@ -21,8 +21,8 @@ internal interface MainScreenContract {
 
     interface Presenter : BasePresenter<View>, DeviceViewHolder.ActionListener {
         fun onConnectClicked()
-        fun onSearchButtonClicked()
         fun onDisconnectClicked()
         fun onVoiceButtonStateChanged(isPressed: Boolean)
+        fun onPermissionsGranted()
     }
 }

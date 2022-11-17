@@ -1,7 +1,6 @@
 package com.chekurda.walkie_talkie.main_screen.presentation
 
 import android.net.wifi.p2p.WifiP2pDevice
-import android.net.wifi.p2p.WifiP2pManager
 import com.chekurda.common.base_fragment.BasePresenterImpl
 import com.chekurda.walkie_talkie.main_screen.data.DeviceInfo
 import com.chekurda.walkie_talkie.main_screen.data.deviceInfo
@@ -17,7 +16,7 @@ internal class MainScreenPresenterImpl(
 
     private var deviceInfoList: List<DeviceInfo> = emptyList()
     private var isConnected: Boolean = false
-    private var connectedDevice: DeviceInfo? = null
+    private var hasPermissions: Boolean = false
 
     init {
         wifiDirectManager.apply {
@@ -34,45 +33,51 @@ internal class MainScreenPresenterImpl(
     override fun detachView() {
         super.detachView()
         wifiDirectManager.clear()
-        connectedDevice = null
-
     }
 
     override fun viewIsResumed() {
         super.viewIsResumed()
-        wifiDirectManager.registerDirectListener(checkNotNull(view).provideActivity())
+        if (hasPermissions) {
+            wifiDirectManager.registerDirectListener(checkNotNull(view).provideActivity())
+            if (!isConnected) wifiDirectManager.startSearchDevices()
+        }
     }
 
     override fun viewIsPaused() {
         super.viewIsPaused()
-        wifiDirectManager.unregisterDirectListener(checkNotNull(view).provideActivity())
+        if (hasPermissions) {
+            if (!isConnected) wifiDirectManager.stopSearchDevices()
+            wifiDirectManager.unregisterDirectListener(checkNotNull(view).provideActivity())
+        }
     }
 
     override fun onConnectClicked() {
-        wifiDirectManager.searchDevices()
         view?.changeDeviceListVisibility(isVisible = true)
     }
 
-    override fun onSearchButtonClicked() {
-        wifiDirectManager.searchDevices()
-    }
-
     override fun onDeviceItemClicked(deviceInfo: DeviceInfo) {
-        connectedDevice = deviceInfo
         wifiDirectManager.connect(deviceInfo.address)
         view?.changeDeviceListVisibility(isVisible = false)
     }
 
     override fun onWaitingConnection() {
+        if (!hasPermissions) return
         view?.showConnectionWaiting()
     }
 
     override fun onDisconnectClicked() {
+        if (!hasPermissions) return
         wifiDirectManager.disconnect()
+    }
+
+    override fun onPermissionsGranted() {
+        hasPermissions = true
+        if (!isConnected) wifiDirectManager.startSearchDevices()
     }
 
     override fun onVoiceButtonStateChanged(isPressed: Boolean) {
         wifiDirectManager.changeSteamDirection(isListening = !isPressed)
+        if (!isPressed) view?.onOutputAmplitudeChanged(0f)
     }
 
     override fun onPeersChanged(devices: List<WifiP2pDevice>) {
@@ -85,15 +90,21 @@ internal class MainScreenPresenterImpl(
         view?.changeSearchState(isRunning)
     }
 
-    override fun onConnectionResult(isSuccess: Boolean) {
-        val connectedDevice = connectedDevice
-        this.isConnected = isSuccess
-        if (isSuccess && connectedDevice != null) {
-            view?.showConnectedState(connectedDevice)
-        } else {
-            this.connectedDevice = null
+    override fun onConnectionSuccess(device: WifiP2pDevice) {
+        this.isConnected = true
+        view?.changeDeviceListVisibility(isVisible = false)
+        view?.showConnectedState(device.deviceInfo)
+        wifiDirectManager.stopSearchDevices()
+    }
+
+    override fun onConnectionCanceled(isError: Boolean) {
+        this.isConnected = false
+        if (isError) {
             view?.showConnectionError()
+        } else {
+            view?.onDisconnected()
         }
+        wifiDirectManager.startSearchDevices()
     }
 
     override fun onInputAmplitudeChanged(amplitude: Float) {

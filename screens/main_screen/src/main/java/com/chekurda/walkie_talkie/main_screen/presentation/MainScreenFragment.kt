@@ -55,7 +55,6 @@ internal class MainScreenFragment : BasePresenterFragment<MainScreenContract.Vie
     private fun initViews(view: View) {
         devicePicker = view.findViewById<DevicePickerView>(R.id.device_picker).apply {
             itemActionListener = presenter
-            searchButtonClickListener = { presenter.onSearchButtonClicked() }
             setOnClickListener { devicePicker?.hide() }
         }
         connectionButton = view.findViewById<ConnectionButton>(R.id.connect_button).apply {
@@ -82,7 +81,9 @@ internal class MainScreenFragment : BasePresenterFragment<MainScreenContract.Vie
     override fun onStart() {
         super.onStart()
         deviceHelper?.configureDevice(isStartRecording = true)
-        permissionsHelper?.request()
+        checkNotNull(permissionsHelper).withPermissions {
+            presenter.onPermissionsGranted()
+        }
     }
 
     override fun onStop() {
@@ -163,7 +164,6 @@ internal class MainScreenFragment : BasePresenterFragment<MainScreenContract.Vie
 
 private val permissions = arrayOf(
     Manifest.permission.RECORD_AUDIO,
-    Manifest.permission.ACCESS_FINE_LOCATION,
-    Manifest.permission.ACCESS_COARSE_LOCATION
+    Manifest.permission.ACCESS_FINE_LOCATION
 )
 private const val PERMISSIONS_REQUEST_CODE = 102

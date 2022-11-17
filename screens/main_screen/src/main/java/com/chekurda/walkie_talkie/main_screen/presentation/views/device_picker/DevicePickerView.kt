@@ -55,42 +55,20 @@ internal class DevicePickerView @JvmOverloads constructor(
         clipToPadding = false
     }
 
-    private val searchButton = Button(context).apply {
-        text = "Continue search"
-        setTextAppearance(R.style.search_button_text_style)
-        updatePadding(
-            left = dp(25),
-            right = dp(25),
-            top = dp(10),
-            bottom = dp(10)
-        )
-        outlineProvider = object : ViewOutlineProvider() {
-            override fun getOutline(view: View, outline: Outline) {
-                outline.setRoundRect(0, 0, view.width, view.height, dp(25).toFloat())
-            }
-        }
-        clipToOutline = true
-        setBackgroundResource(R.color.search_button_background_color)
-        setOnClickListener {
-            searchButtonClickListener?.invoke()
-        }
-    }
-
     private val progressView = ProgressBar(context)
     private val progressSize = dp(30)
 
     var itemActionListener: DeviceViewHolder.ActionListener? = null
-    var searchButtonClickListener: SearchButtonClickListener? = null
 
     init {
         setWillNotDraw(false)
         addView(recyclerView)
-        addView(searchButton)
         addView(progressView)
         updatePadding(left = dp(25), right = dp(25))
     }
 
     fun show() {
+        if (isVisible) return
         alphaAnimator?.cancel()
         isVisible = true
         alpha = 0f
@@ -105,6 +83,7 @@ internal class DevicePickerView @JvmOverloads constructor(
     }
 
     fun hide() {
+        if (!isVisible) return
         alphaAnimator?.cancel()
         alphaAnimator = animate().alpha(0f)
             .setDuration(250)
@@ -118,13 +97,11 @@ internal class DevicePickerView @JvmOverloads constructor(
     }
 
     fun changeSearchState(isRunning: Boolean) {
-        searchButton.isVisible = !isRunning
         progressView.isVisible = isRunning && adapter.deviceList.isEmpty()
         adapter.changeSearchState(isRunning)
     }
 
     fun updateDeviceList(deviceInfoList: List<DeviceInfo>) {
-        if (!isVisible) return
         adapter.setDataList(deviceInfoList)
         if (progressView.isVisible && deviceInfoList.isNotEmpty()) {
             progressView.isVisible = false
@@ -138,7 +115,6 @@ internal class DevicePickerView @JvmOverloads constructor(
             makeMeasureSpec(width - paddingStart - paddingEnd, MeasureSpec.EXACTLY),
             makeMeasureSpec(MeasureSpec.getSize(heightMeasureSpec) / 2, MeasureSpec.EXACTLY)
         )
-        searchButton.measure(makeUnspecifiedSpec(), makeUnspecifiedSpec())
         progressView.measure(makeExactlySpec(progressSize), makeExactlySpec(progressSize))
         setMeasuredDimension(width, height)
     }
@@ -157,10 +133,6 @@ internal class DevicePickerView @JvmOverloads constructor(
             recyclerView.left + (recyclerView.measuredWidth - progressView.measuredWidth).half,
             recyclerView.top + (recyclerView.measuredHeight - progressView.measuredHeight).half
         )
-        searchButton.layout(
-            paddingStart + (measuredWidth - paddingStart - paddingEnd - searchButton.measuredWidth).half,
-            recyclerView.bottom + (measuredHeight - paddingBottom - recyclerView.bottom - searchButton.measuredHeight).half
-        )
     }
 
     override fun onDraw(canvas: Canvas) {
@@ -168,5 +140,3 @@ internal class DevicePickerView @JvmOverloads constructor(
         invalidate()
     }
 }
-
-internal typealias SearchButtonClickListener = () -> Unit
