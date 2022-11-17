@@ -152,7 +152,6 @@ internal class WifiDirectConnectionManager(
             }
         }
         manager?.removeGroup(channel, callback)
-        manager?.clearLocalServices(channel, emptyManagerListener)
     }
 
     fun registerDirectListener(context: Context) {
@@ -268,4 +267,4 @@ private val emptyManagerListener = object : ActionListener {
 private const val CONNECTION_WAITING_TIMEOUT_SEC = 25L
 private const val CONNECTION_PORT = 6542
 private const val BACKLOG = 50
-private const val CONNECTION_TIMEOUT = 30000
+private const val CONNECTION_TIMEOUT = 2000
