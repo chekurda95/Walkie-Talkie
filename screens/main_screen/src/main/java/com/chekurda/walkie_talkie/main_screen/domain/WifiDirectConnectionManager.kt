@@ -137,26 +137,19 @@ internal class WifiDirectConnectionManager(
     }
 
     fun disconnect(listener : ActionListener? = null) {
+        val callback = listener ?: object : ActionListener {
+            override fun onSuccess() {
+                onDisconnected()
+            }
+
+            override fun onFailure(reason: Int) {
+                onDisconnected()
+            }
+        }
         if (isGroupConnected) {
-            manager?.removeGroup(channel, object : ActionListener {
-                override fun onSuccess() {
-                    listener?.onSuccess()
-                }
-
-                override fun onFailure(reason: Int) {
-                    listener?.onFailure(reason)
-                }
-            })
+            manager?.removeGroup(channel, callback)
         } else {
-            manager?.cancelConnect(channel, object : ActionListener {
-                override fun onSuccess() {
-                    listener?.onSuccess()
-                }
-
-                override fun onFailure(reason: Int) {
-                    listener?.onSuccess()
-                }
-            })
+            manager?.cancelConnect(channel, callback)
         }
     }
 
