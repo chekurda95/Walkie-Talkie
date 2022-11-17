@@ -26,9 +26,9 @@ internal class ConnectionButton @JvmOverloads constructor(
 ) : View(context, attrs) {
 
     enum class ButtonState(val text: String, @DrawableRes val backgroundRes: Int) {
-        CONNECT_SUGGESTION("Connect", R.drawable.connect_button_background),
-        DISCONNECT_SUGGESTION("Disconnect", R.drawable.disconnect_button_background),
-        WAITING_CONNECTION("Connecting", R.drawable.connect_button_background)
+        CONNECT_SUGGESTION("Connect".uppercase(), R.drawable.connect_button_background),
+        DISCONNECT_SUGGESTION("Disconnect".uppercase(), R.drawable.disconnect_button_background),
+        WAITING_CONNECTION("Connecting".uppercase(), R.drawable.connect_button_background)
     }
 
     private val textLayout = TextLayout {

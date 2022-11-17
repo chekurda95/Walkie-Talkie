@@ -45,14 +45,9 @@
 
     <com.chekurda.walkie_talkie.main_screen.presentation.views.RecordButtonView
         android:id="@+id/record_button"
-        android:layout_width="100dp"
-        android:layout_height="100dp"
-        android:padding="10dp"
-        android:text="Press"
-        android:textStyle="bold"
-        android:textColor="@android:color/white"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
         android:enabled="false"
-        android:background="@color/record_button_background_color"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/connect_button"
         app:layout_constraintBottom_toBottomOf="parent"

@@ -125,22 +125,28 @@ internal class MainScreenFragment : BasePresenterFragment<MainScreenContract.Vie
 
     override fun showConnectedState(connectedDevice: DeviceInfo) {
         connectionButton?.buttonState = ButtonState.DISCONNECT_SUGGESTION
+        recordButton?.isEnabled = true
     }
 
     override fun showConnectionError() {
-        connectionButton?.buttonState = ButtonState.CONNECT_SUGGESTION
+        clearState()
     }
 
     override fun onDisconnected() {
+        clearState()
+    }
+
+    private fun clearState() {
         connectionButton?.buttonState = ButtonState.CONNECT_SUGGESTION
+        recordButton?.isEnabled = false
     }
 
     override fun onInputAmplitudeChanged(amplitude: Float) {
-        view?.post { TODO("Отобразить амплитуду входящего звука") }
+        view?.post {  }
     }
 
     override fun onOutputAmplitudeChanged(amplitude: Float) {
-        view?.post { TODO("Отобразить амплитуду исходящего звука") }
+        view?.post { recordButton?.amplitude = amplitude }
     }
 
     override fun provideActivity(): Activity = requireActivity()
