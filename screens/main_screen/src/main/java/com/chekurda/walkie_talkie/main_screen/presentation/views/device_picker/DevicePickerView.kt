@@ -53,7 +53,6 @@ internal class DevicePickerView @JvmOverloads constructor(
         }
         clipToOutline = true
         clipToPadding = false
-        updatePadding(dp(12))
     }
 
     private val searchButton = Button(context).apply {
