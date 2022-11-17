@@ -195,7 +195,7 @@ internal class RecordButtonView @JvmOverloads constructor(
                 val buttonSize = dp(120)
                 val buttonRadius = buttonSize / 2f
                 val amplitudeMinSize = dp(130)
-                val amplitudeMaxSize = dp(190)
+                val amplitudeMaxSize = dp(250)
                 RecordButtonDimens(
                     buttonSize = buttonSize,
                     buttonRadius = buttonRadius,
@@ -223,4 +223,4 @@ private const val AMPLITUDE_PAINT_ALPHA = (PAINT_MAX_ALPHA * AMPLITUDE_ALPHA_PER
  */
 private const val MAX_BUTTON_SCALE = 1.1f
 
-private const val BACKGROUND_AMPLITUDE_SCALE = 0.10f
+private const val BACKGROUND_AMPLITUDE_SCALE = 0.50f

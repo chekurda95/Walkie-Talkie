@@ -29,6 +29,16 @@
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintTop_toBottomOf="@id/connection_info_view"/>
 
+    <com.chekurda.walkie_talkie.main_screen.presentation.views.RecordButtonView
+        android:id="@+id/record_button"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:enabled="false"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/connect_button"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"/>
+
     <com.chekurda.walkie_talkie.main_screen.presentation.views.ConnectionButton
         android:id="@+id/connect_button"
         android:layout_width="wrap_content"
@@ -41,16 +51,6 @@
         android:paddingEnd="25dp"
         app:layout_constraintTop_toBottomOf="@+id/speaker_view"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintEnd_toEndOf="parent"/>
-
-    <com.chekurda.walkie_talkie.main_screen.presentation.views.RecordButtonView
-        android:id="@+id/record_button"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:enabled="false"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/connect_button"
-        app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"/>
 
     <com.chekurda.walkie_talkie.main_screen.presentation.views.device_picker.DevicePickerView

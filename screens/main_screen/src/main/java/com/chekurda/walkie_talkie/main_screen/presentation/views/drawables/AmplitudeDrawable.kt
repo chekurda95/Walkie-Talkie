@@ -140,6 +140,11 @@ internal class AmplitudeDrawable(private val paint: Paint) : Drawable() {
         val isSoSmall = amplitudeChangingSpeed < 0 && animatedAmplitude < amplitude
         if (isSoBig || isSoSmall) {
             animatedAmplitude = amplitude
+            if (isSoSmall) {
+                amplitudeChangingSpeed = 0f
+                animatePulsation = true
+                pulseStableAmplitude = 0f
+            }
         }
     }
 
@@ -152,7 +157,7 @@ internal class AmplitudeDrawable(private val paint: Paint) : Drawable() {
 
 private const val EXPAND_ANIMATION_TIME_MS = 150f
 private const val COLLAPSE_ANIMATION_TIME_MS = 250f
-private const val PULSATION_TIME_MS = 1000f
+private const val PULSATION_TIME_MS = 1500f
 private const val PULSE_AVAILABLE_ANIMATION_SPEED = 0.005f
 private const val ANIMATION_END_POINT_DELTA = 0.01f
 private const val FRAME_TIME_MS = 17L
