@@ -28,7 +28,6 @@ internal class MainScreenPresenterImpl(
     override fun attachView(view: MainScreenContract.View) {
         super.attachView(view)
         wifiDirectManager.init(view.provideActivity())
-
     }
 
     override fun detachView() {
@@ -53,6 +52,10 @@ internal class MainScreenPresenterImpl(
         view?.changeDeviceListVisibility(isVisible = true)
     }
 
+    override fun onSearchButtonClicked() {
+        wifiDirectManager.searchDevices()
+    }
+
     override fun onDeviceItemClicked(deviceInfo: DeviceInfo) {
         connectedDevice = deviceInfo
         wifiDirectManager.connect(deviceInfo.address)
@@ -69,6 +72,7 @@ internal class MainScreenPresenterImpl(
     }
 
     override fun onPeersChanged(devices: List<WifiP2pDevice>) {
+        if (devices.isEmpty() && deviceInfoList.isNotEmpty()) return
         deviceInfoList = devices.map { it.deviceInfo }
         view?.updateDeviceList(deviceInfoList)
     }
@@ -79,6 +83,10 @@ internal class MainScreenPresenterImpl(
             connectedDevice = null
             view?.onDisconnected()
         }
+    }
+
+    override fun onSearchStateChanged(isRunning: Boolean) {
+        view?.changeSearchState(isRunning)
     }
 
     override fun onConnectionResult(isSuccess: Boolean) {

@@ -54,8 +54,12 @@ internal class MainScreenFragment : BasePresenterFragment<MainScreenContract.Vie
 
     @SuppressLint("ClickableViewAccessibility")
     private fun initViews(view: View) {
-        devicePicker = view.findViewById(R.id.device_picker)
-        connectButton = view.findViewById<Button?>(R.id.connect_button).apply {
+        devicePicker = view.findViewById<DevicePickerView>(R.id.device_picker).apply {
+            itemActionListener = presenter
+            searchButtonClickListener = { presenter.onSearchButtonClicked() }
+            setOnClickListener { devicePicker?.hide() }
+        }
+        connectButton = view.findViewById<Button>(R.id.connect_button).apply {
             setOnClickListener {
                 if (true) {
                     presenter.onConnectClicked()
@@ -111,6 +115,10 @@ internal class MainScreenFragment : BasePresenterFragment<MainScreenContract.Vie
 
     override fun updateDeviceList(deviceInfoList: List<DeviceInfo>) {
         devicePicker?.updateDeviceList(deviceInfoList)
+    }
+
+    override fun changeSearchState(isRunning: Boolean) {
+        devicePicker?.changeSearchState(isRunning)
     }
 
     override fun showConnectedState(connectedDevice: DeviceInfo) {

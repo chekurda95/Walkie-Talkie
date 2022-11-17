@@ -9,16 +9,21 @@ import android.view.View
 import android.view.View.MeasureSpec.makeMeasureSpec
 import android.view.ViewOutlineProvider
 import android.view.ViewPropertyAnimator
+import android.widget.Button
 import android.widget.FrameLayout
+import android.widget.ProgressBar
 import androidx.core.view.isVisible
 import androidx.core.view.updatePadding
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.chekurda.common.half
+import com.chekurda.design.custom_view_tools.utils.MeasureSpecUtils.makeExactlySpec
+import com.chekurda.design.custom_view_tools.utils.MeasureSpecUtils.makeUnspecifiedSpec
 import com.chekurda.design.custom_view_tools.utils.MeasureSpecUtils.measureDirection
 import com.chekurda.design.custom_view_tools.utils.dp
 import com.chekurda.design.custom_view_tools.utils.layout
 import com.chekurda.walkie_talkie.main_screen.data.DeviceInfo
+import com.chekurda.walkie_talkie.main_screen.presentation.views.device_picker.holder.DeviceViewHolder
 import com.chekurda.walkie_talkie.main_screen.presentation.views.drawables.BlurBehindDrawable
 
 internal class DevicePickerView @JvmOverloads constructor(
@@ -26,7 +31,16 @@ internal class DevicePickerView @JvmOverloads constructor(
     attrs: AttributeSet? = null
 ) : FrameLayout(context, attrs) {
 
-    private val adapter = DeviceListAdapter { }
+    private val blurDrawable = BlurBehindDrawable(this) { parent as View }.apply {
+        setAnimateAlpha(false)
+    }
+
+    private var alphaAnimator: ViewPropertyAnimator? = null
+
+    private val adapter = DeviceListAdapter { deviceInfo ->
+        hide()
+        itemActionListener?.onDeviceItemClicked(deviceInfo)
+    }
     private val recyclerView = RecyclerView(context).apply {
         layoutManager = LinearLayoutManager(context)
         adapter = this@DevicePickerView.adapter
@@ -40,38 +54,54 @@ internal class DevicePickerView @JvmOverloads constructor(
         clipToPadding = false
         updatePadding(dp(12))
     }
-    private val blurDrawable = BlurBehindDrawable(this) { parent as View }.apply {
-        setAnimateAlpha(false)
+
+    private val searchButton = Button(context).apply {
+        text = "Continue search"
+        updatePadding(
+            left = dp(25),
+            right = dp(25),
+            top = dp(10),
+            bottom = dp(10)
+        )
+        setOnClickListener {
+            searchButtonClickListener?.invoke()
+        }
     }
 
-    private var alphaAnimator: ViewPropertyAnimator? = null
+    private val progressView = ProgressBar(context)
+    private val progressSize = dp(30)
+
+    var itemActionListener: DeviceViewHolder.ActionListener? = null
+    var searchButtonClickListener: SearchButtonClickListener? = null
 
     init {
         setWillNotDraw(false)
         addView(recyclerView)
+        addView(searchButton)
+        addView(progressView)
         updatePadding(left = dp(25), right = dp(25))
-        alpha = 0f
     }
 
     fun show() {
         alphaAnimator?.cancel()
         isVisible = true
-
+        alpha = 0f
         alphaAnimator = animate().alpha(1f)
             .setDuration(250)
-            .withEndAction { alphaAnimator = null }
-            .apply { start() }
+            .withEndAction {
+                alpha = 1f
+                alphaAnimator = null
+            }.apply { start() }
         blurDrawable.show(true)
         blurDrawable.invalidate()
     }
 
     fun hide() {
         alphaAnimator?.cancel()
-        isVisible = false
-
         alphaAnimator = animate().alpha(0f)
             .setDuration(250)
             .withEndAction {
+                alpha = 0f
                 isVisible = false
                 blurDrawable.clear()
                 alphaAnimator = null
@@ -79,8 +109,18 @@ internal class DevicePickerView @JvmOverloads constructor(
             .apply { start() }
     }
 
+    fun changeSearchState(isRunning: Boolean) {
+        searchButton.isEnabled = !isRunning
+        progressView.isVisible = isRunning && adapter.deviceList.isEmpty()
+        adapter.changeSearchState(isRunning)
+    }
+
     fun updateDeviceList(deviceInfoList: List<DeviceInfo>) {
+        if (!isVisible) return
         adapter.setDataList(deviceInfoList)
+        if (progressView.isVisible && deviceInfoList.isNotEmpty()) {
+            progressView.isVisible = false
+        }
     }
 
     override fun onMeasure(widthMeasureSpec: Int, heightMeasureSpec: Int) {
@@ -90,6 +130,8 @@ internal class DevicePickerView @JvmOverloads constructor(
             makeMeasureSpec(width - paddingStart - paddingEnd, MeasureSpec.EXACTLY),
             makeMeasureSpec(MeasureSpec.getSize(heightMeasureSpec) / 2, MeasureSpec.EXACTLY)
         )
+        searchButton.measure(makeUnspecifiedSpec(), makeUnspecifiedSpec())
+        progressView.measure(makeExactlySpec(progressSize), makeExactlySpec(progressSize))
         setMeasuredDimension(width, height)
     }
 
@@ -103,6 +145,14 @@ internal class DevicePickerView @JvmOverloads constructor(
             paddingStart,
             paddingTop + (measuredHeight - paddingTop - paddingBottom - recyclerView.measuredHeight).half
         )
+        progressView.layout(
+            recyclerView.left + (recyclerView.measuredWidth - progressView.measuredWidth).half,
+            recyclerView.top + (recyclerView.measuredHeight - progressView.measuredHeight).half
+        )
+        searchButton.layout(
+            paddingStart + (measuredWidth - paddingStart - paddingEnd - searchButton.measuredWidth).half,
+            recyclerView.bottom + (measuredHeight - paddingBottom - recyclerView.bottom - searchButton.measuredHeight).half
+        )
     }
 
     override fun onDraw(canvas: Canvas) {
@@ -110,3 +160,5 @@ internal class DevicePickerView @JvmOverloads constructor(
         invalidate()
     }
 }
+
+internal typealias SearchButtonClickListener = () -> Unit

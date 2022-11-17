@@ -17,7 +17,7 @@ internal class DeviceViewHolder private constructor(
     private lateinit var data: DeviceInfo
 
     init {
-        view.setOnClickListener { actionListener.onClick(data) }
+        view.setOnClickListener { actionListener.onDeviceItemClicked(data) }
     }
 
     fun bind(data: DeviceInfo) {
@@ -27,6 +27,6 @@ internal class DeviceViewHolder private constructor(
 
     fun interface ActionListener {
 
-        fun onClick(data: DeviceInfo)
+        fun onDeviceItemClicked(deviceInfo: DeviceInfo)
     }
 }

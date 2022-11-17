@@ -17,6 +17,7 @@ import io.reactivex.Observable
 import io.reactivex.Single
 import io.reactivex.android.schedulers.AndroidSchedulers
 import io.reactivex.disposables.CompositeDisposable
+import io.reactivex.disposables.SerialDisposable
 import io.reactivex.schedulers.Schedulers
 import java.net.InetSocketAddress
 import java.net.ServerSocket
@@ -31,6 +32,7 @@ internal class WifiDirectConnectionManager(
         fun onPeersChanged(devices: List<WifiP2pDevice>)
         fun onConnectionResult(isSuccess: Boolean)
         fun onGroupConnectionStateChanged(isConnected: Boolean)
+        fun onSearchStateChanged(isRunning: Boolean)
     }
 
     var processListener: ProcessListener? = null
@@ -41,7 +43,10 @@ internal class WifiDirectConnectionManager(
     private var channel: WifiP2pManager.Channel? = null
     private var manager: WifiP2pManager? = null
 
-    private val disposer = CompositeDisposable()
+    private val searchDisposable = SerialDisposable()
+    private val disposer = CompositeDisposable().apply {
+        add(searchDisposable)
+    }
 
     private val wifiReceiver = WifiDirectReceiver(
         object : WifiDirectReceiver.ProcessListener {
@@ -79,9 +84,15 @@ internal class WifiDirectConnectionManager(
     fun searchDevices() {
         Observable.timer(SEARCH_DEVICES_TIMEOUT_SEC, TimeUnit.SECONDS)
             .observeOn(AndroidSchedulers.mainThread())
-            .doOnSubscribe { checkNotNull(manager).discoverPeers(channel, emptyManagerListener) }
-            .subscribe{ checkNotNull(manager).stopPeerDiscovery(channel, emptyManagerListener) }
-            .storeIn(disposer)
+            .doOnSubscribe {
+                checkNotNull(manager).discoverPeers(channel, emptyManagerListener)
+                processListener?.onSearchStateChanged(isRunning = true)
+            }
+            .subscribe{
+                checkNotNull(manager).stopPeerDiscovery(channel, emptyManagerListener)
+                processListener?.onSearchStateChanged(isRunning = false)
+            }
+            .storeIn(searchDisposable)
     }
 
     fun connect(address: String) {
