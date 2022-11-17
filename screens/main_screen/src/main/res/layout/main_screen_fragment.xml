@@ -29,16 +29,14 @@
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintTop_toBottomOf="@id/connection_info_view"/>
 
-    <androidx.appcompat.widget.AppCompatButton
+    <com.chekurda.walkie_talkie.main_screen.presentation.views.ConnectionButton
         android:id="@+id/connect_button"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="Connect"
         android:padding="10dp"
         android:textStyle="bold"
         android:textColor="@android:color/white"
         android:layout_marginTop="25dp"
-        android:background="@drawable/connect_button_background"
         app:layout_constraintTop_toBottomOf="@+id/speaker_view"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent"/>

@@ -12,6 +12,7 @@ import android.net.wifi.p2p.WifiP2pConfig
 import android.net.wifi.p2p.WifiP2pDevice
 import android.net.wifi.p2p.WifiP2pInfo
 import android.net.wifi.p2p.WifiP2pManager
+import android.net.wifi.p2p.WifiP2pManager.ActionListener
 import com.chekurda.common.storeIn
 import io.reactivex.Observable
 import io.reactivex.Single
@@ -31,8 +32,8 @@ internal class WifiDirectConnectionManager(
     interface ProcessListener {
         fun onPeersChanged(devices: List<WifiP2pDevice>)
         fun onConnectionResult(isSuccess: Boolean)
-        fun onGroupConnectionStateChanged(isConnected: Boolean)
         fun onSearchStateChanged(isRunning: Boolean)
+        fun onWaitingConnection()
     }
 
     var processListener: ProcessListener? = null
@@ -44,9 +45,14 @@ internal class WifiDirectConnectionManager(
     private var manager: WifiP2pManager? = null
 
     private val searchDisposable = SerialDisposable()
+    private val connectDisposable = SerialDisposable()
+    private val prepareSocketDisposable = SerialDisposable()
     private val disposer = CompositeDisposable().apply {
         add(searchDisposable)
+        add(connectDisposable)
+        add(prepareSocketDisposable)
     }
+    private var isGroupConnected = false
 
     private val wifiReceiver = WifiDirectReceiver(
         object : WifiDirectReceiver.ProcessListener {
@@ -59,7 +65,7 @@ internal class WifiDirectConnectionManager(
 
             override fun onConnectionChanged(isConnected: Boolean) {
                 if (isConnected) manager?.requestConnectionInfo(channel, ::prepareSocket)
-                processListener?.onGroupConnectionStateChanged(isConnected)
+                isGroupConnected = isConnected
             }
         }
     )
@@ -96,32 +102,62 @@ internal class WifiDirectConnectionManager(
     }
 
     fun connect(address: String) {
-        checkNotNull(manager).connect(
-            channel,
-            WifiP2pConfig().apply {
-                deviceAddress = address
-                wps.setup = WpsInfo.PBC
-            },
-            object : WifiP2pManager.ActionListener {
-                override fun onSuccess() = Unit
-                override fun onFailure(reason: Int) {
-                    processListener?.onConnectionResult(isSuccess = false)
-                }
+        Observable.timer(CONNECTION_WAITING_TIMEOUT_SEC, TimeUnit.SECONDS)
+            .observeOn(AndroidSchedulers.mainThread())
+            .doOnSubscribe {
+                checkNotNull(manager).connect(
+                    channel,
+                    WifiP2pConfig().apply {
+                        deviceAddress = address
+                        wps.setup = WpsInfo.PBC
+                    },
+                    object : ActionListener {
+                        override fun onSuccess() = Unit
+                        override fun onFailure(reason: Int) {
+                            processListener?.onConnectionResult(isSuccess = false)
+                        }
+                    }
+                )
+                processListener?.onWaitingConnection()
             }
-        )
+            .ignoreElements()
+            .subscribe {
+                prepareSocketDisposable.set(null)
+                disconnect(object : ActionListener {
+                    val callback = { processListener?.onConnectionResult(isSuccess = false) }
+                    override fun onSuccess() {
+                        callback()
+                    }
+
+                    override fun onFailure(reason: Int) {
+                        callback()
+                    }
+                })
+            }.storeIn(connectDisposable)
     }
 
-    fun disconnect(listener : WifiP2pManager.ActionListener? = null) {
-        manager?.removeGroup(channel, object : WifiP2pManager.ActionListener {
-            override fun onSuccess() {
-                onDisconnected()
-                listener?.onSuccess()
-            }
+    fun disconnect(listener : ActionListener? = null) {
+        if (isGroupConnected) {
+            manager?.removeGroup(channel, object : ActionListener {
+                override fun onSuccess() {
+                    listener?.onSuccess()
+                }
 
-            override fun onFailure(reason: Int) {
-                listener?.onFailure(reason)
-            }
-        })
+                override fun onFailure(reason: Int) {
+                    listener?.onFailure(reason)
+                }
+            })
+        } else {
+            manager?.cancelConnect(channel, object : ActionListener {
+                override fun onSuccess() {
+                    listener?.onSuccess()
+                }
+
+                override fun onFailure(reason: Int) {
+                    listener?.onSuccess()
+                }
+            })
+        }
     }
 
     fun registerDirectListener(context: Context) {
@@ -155,16 +191,26 @@ internal class WifiDirectConnectionManager(
             socket
         }.subscribeOn(Schedulers.io())
             .observeOn(AndroidSchedulers.mainThread())
-            .subscribe(::onConnected) { onDisconnected() }
-            .storeIn(disposer)
+            .subscribe(::onConnected) { disconnect(object : ActionListener {
+                val callback = { onDisconnected() }
+                override fun onSuccess() {
+                    callback()
+                }
+
+                override fun onFailure(reason: Int) {
+                    callback()
+                }
+            }) }
+            .storeIn(prepareSocketDisposable)
     }
 
     private fun onConnected(socket: Socket) {
+        connectDisposable.set(null)
         isConnected = true
         processListener?.onConnectionResult(isSuccess = true)
         audioStreamer.connect(socket) {
-            disconnect(object : WifiP2pManager.ActionListener {
-                val callback = {  processListener?.onGroupConnectionStateChanged(isConnected = false) }
+            disconnect(object : ActionListener {
+                val callback = {  processListener?.onConnectionResult(isSuccess = false) }
                 override fun onSuccess() {
                     callback()
                 }
@@ -177,8 +223,9 @@ internal class WifiDirectConnectionManager(
 
     private fun onDisconnected() {
         isConnected = false
+        isGroupConnected = false
         audioStreamer.disconnect()
-        processListener?.onGroupConnectionStateChanged(isConnected = false)
+        processListener?.onConnectionResult(isSuccess = false)
     }
 }
 
@@ -215,12 +262,13 @@ private class WifiDirectReceiver(
     }
 }
 
-private val emptyManagerListener = object : WifiP2pManager.ActionListener {
+private val emptyManagerListener = object : ActionListener {
     override fun onSuccess() = Unit
     override fun onFailure(reason: Int) = Unit
 }
 
 private const val SEARCH_DEVICES_TIMEOUT_SEC = 15L
+private const val CONNECTION_WAITING_TIMEOUT_SEC = 25L
 private const val CONNECTION_PORT = 6436
 private const val BACKLOG = 50
-private const val CONNECTION_TIMEOUT = 500
+private const val CONNECTION_TIMEOUT = 1000

@@ -1,6 +1,7 @@
 package com.chekurda.walkie_talkie.main_screen.presentation
 
 import android.net.wifi.p2p.WifiP2pDevice
+import android.net.wifi.p2p.WifiP2pManager
 import com.chekurda.common.base_fragment.BasePresenterImpl
 import com.chekurda.walkie_talkie.main_screen.data.DeviceInfo
 import com.chekurda.walkie_talkie.main_screen.data.deviceInfo
@@ -62,9 +63,12 @@ internal class MainScreenPresenterImpl(
         view?.changeDeviceListVisibility(isVisible = false)
     }
 
+    override fun onWaitingConnection() {
+        view?.showConnectionWaiting()
+    }
+
     override fun onDisconnectClicked() {
-        connectedDevice = null
-        view?.onDisconnected()
+        wifiDirectManager.disconnect()
     }
 
     override fun onVoiceButtonStateChanged(isPressed: Boolean) {
@@ -77,20 +81,13 @@ internal class MainScreenPresenterImpl(
         view?.updateDeviceList(deviceInfoList)
     }
 
-    override fun onGroupConnectionStateChanged(isConnected: Boolean) {
-        this.isConnected = isConnected
-        if (!isConnected) {
-            connectedDevice = null
-            view?.onDisconnected()
-        }
-    }
-
     override fun onSearchStateChanged(isRunning: Boolean) {
         view?.changeSearchState(isRunning)
     }
 
     override fun onConnectionResult(isSuccess: Boolean) {
         val connectedDevice = connectedDevice
+        this.isConnected = isSuccess
         if (isSuccess && connectedDevice != null) {
             view?.showConnectedState(connectedDevice)
         } else {

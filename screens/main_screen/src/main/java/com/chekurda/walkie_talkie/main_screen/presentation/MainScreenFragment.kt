@@ -7,7 +7,6 @@ import android.content.Context
 import android.os.Bundle
 import android.view.MotionEvent
 import android.view.View
-import android.widget.Button
 import androidx.fragment.app.Fragment
 import androidx.recyclerview.widget.RecyclerView
 import com.chekurda.common.base_fragment.BasePresenterFragment
@@ -16,6 +15,8 @@ import com.chekurda.walkie_talkie.main_screen.contact.MainScreenFragmentFactory
 import com.chekurda.walkie_talkie.main_screen.data.DeviceInfo
 import com.chekurda.walkie_talkie.main_screen.domain.AudioStreamer
 import com.chekurda.walkie_talkie.main_screen.domain.WifiDirectConnectionManager
+import com.chekurda.walkie_talkie.main_screen.presentation.views.ConnectionButton
+import com.chekurda.walkie_talkie.main_screen.presentation.views.ConnectionButton.*
 import com.chekurda.walkie_talkie.main_screen.presentation.views.device_picker.DeviceListAdapter
 import com.chekurda.walkie_talkie.main_screen.presentation.views.RecordButtonView
 import com.chekurda.walkie_talkie.main_screen.presentation.views.device_picker.DevicePickerView
@@ -30,10 +31,9 @@ internal class MainScreenFragment : BasePresenterFragment<MainScreenContract.Vie
     }
 
     override val layoutRes: Int = R.layout.main_screen_fragment
-    private val adapter: DeviceListAdapter = DeviceListAdapter { presenter.onDeviceItemClicked(it) }
 
     private var recyclerView: RecyclerView? = null
-    private var connectButton: Button? = null
+    private var connectionButton: ConnectionButton? = null
     private var recordButton: RecordButtonView? = null
     private var devicePicker: DevicePickerView? = null
 
@@ -45,7 +45,6 @@ internal class MainScreenFragment : BasePresenterFragment<MainScreenContract.Vie
         permissionsHelper = PermissionsHelper(requireActivity(), permissions, PERMISSIONS_REQUEST_CODE)
         deviceHelper = RecordingDeviceHelper(requireActivity())
     }
-
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
@@ -59,12 +58,12 @@ internal class MainScreenFragment : BasePresenterFragment<MainScreenContract.Vie
             searchButtonClickListener = { presenter.onSearchButtonClicked() }
             setOnClickListener { devicePicker?.hide() }
         }
-        connectButton = view.findViewById<Button>(R.id.connect_button).apply {
+        connectionButton = view.findViewById<ConnectionButton>(R.id.connect_button).apply {
             setOnClickListener {
-                if (true) {
-                    presenter.onConnectClicked()
-                } else {
-                    presenter.onDisconnectClicked()
+                when (connectionButton!!.buttonState) {
+                    ButtonState.CONNECT_SUGGESTION -> presenter.onConnectClicked()
+                    ButtonState.DISCONNECT_SUGGESTION,
+                    ButtonState.WAITING_CONNECTION -> presenter.onDisconnectClicked()
                 }
             }
         }
@@ -86,10 +85,6 @@ internal class MainScreenFragment : BasePresenterFragment<MainScreenContract.Vie
         permissionsHelper?.request()
     }
 
-    override fun onResume() {
-        super.onResume()
-    }
-
     override fun onStop() {
         super.onStop()
         deviceHelper?.configureDevice(isStartRecording = false)
@@ -98,7 +93,7 @@ internal class MainScreenFragment : BasePresenterFragment<MainScreenContract.Vie
     override fun onDestroyView() {
         super.onDestroyView()
         recyclerView = null
-        connectButton = null
+        connectionButton = null
         recordButton = null
         devicePicker = null
     }
@@ -110,7 +105,10 @@ internal class MainScreenFragment : BasePresenterFragment<MainScreenContract.Vie
     }
 
     override fun changeDeviceListVisibility(isVisible: Boolean) {
-        devicePicker?.show()
+        devicePicker?.apply {
+            if (isVisible) show()
+            else hide()
+        }
     }
 
     override fun updateDeviceList(deviceInfoList: List<DeviceInfo>) {
@@ -121,16 +119,20 @@ internal class MainScreenFragment : BasePresenterFragment<MainScreenContract.Vie
         devicePicker?.changeSearchState(isRunning)
     }
 
+    override fun showConnectionWaiting() {
+        connectionButton?.buttonState = ButtonState.WAITING_CONNECTION
+    }
+
     override fun showConnectedState(connectedDevice: DeviceInfo) {
-        TODO("Отобразить подключение к девайсу.")
+        connectionButton?.buttonState = ButtonState.DISCONNECT_SUGGESTION
     }
 
     override fun showConnectionError() {
-        TODO("Соединение оборвалось, сбросить состояние и показать ошибку.")
+        connectionButton?.buttonState = ButtonState.CONNECT_SUGGESTION
     }
 
     override fun onDisconnected() {
-        TODO("Рассоединение прошло успешно.")
+        connectionButton?.buttonState = ButtonState.CONNECT_SUGGESTION
     }
 
     override fun onInputAmplitudeChanged(amplitude: Float) {

@@ -12,6 +12,7 @@ internal interface MainScreenContract {
         fun changeDeviceListVisibility(isVisible: Boolean)
         fun updateDeviceList(deviceInfoList: List<DeviceInfo>)
         fun changeSearchState(isRunning: Boolean)
+        fun showConnectionWaiting()
         fun showConnectedState(connectedDevice: DeviceInfo)
         fun showConnectionError()
         fun onDisconnected()
