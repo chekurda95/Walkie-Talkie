@@ -21,6 +21,7 @@
     <item name="connect_button_background_color" type="color">#388E3C</item>
     <item name="disconnect_button_background_color" type="color">#E9593E</item>
     <item name="record_amplitude_background_color" type="color">#325474</item>
+    <item name="search_button_background_color" type="color">@color/record_button_background_color</item>
 
 
 </resources>

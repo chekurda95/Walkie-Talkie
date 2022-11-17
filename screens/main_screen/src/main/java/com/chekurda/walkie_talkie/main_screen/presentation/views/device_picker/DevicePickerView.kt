@@ -22,6 +22,7 @@ import com.chekurda.design.custom_view_tools.utils.MeasureSpecUtils.makeUnspecif
 import com.chekurda.design.custom_view_tools.utils.MeasureSpecUtils.measureDirection
 import com.chekurda.design.custom_view_tools.utils.dp
 import com.chekurda.design.custom_view_tools.utils.layout
+import com.chekurda.walkie_talkie.main_screen.R
 import com.chekurda.walkie_talkie.main_screen.data.DeviceInfo
 import com.chekurda.walkie_talkie.main_screen.presentation.views.device_picker.holder.DeviceViewHolder
 import com.chekurda.walkie_talkie.main_screen.presentation.views.drawables.BlurBehindDrawable
@@ -57,12 +58,20 @@ internal class DevicePickerView @JvmOverloads constructor(
 
     private val searchButton = Button(context).apply {
         text = "Continue search"
+        setTextAppearance(R.style.search_button_text_style)
         updatePadding(
             left = dp(25),
             right = dp(25),
             top = dp(10),
             bottom = dp(10)
         )
+        outlineProvider = object : ViewOutlineProvider() {
+            override fun getOutline(view: View, outline: Outline) {
+                outline.setRoundRect(0, 0, view.width, view.height, dp(25).toFloat())
+            }
+        }
+        clipToOutline = true
+        setBackgroundResource(R.color.search_button_background_color)
         setOnClickListener {
             searchButtonClickListener?.invoke()
         }
@@ -110,7 +119,7 @@ internal class DevicePickerView @JvmOverloads constructor(
     }
 
     fun changeSearchState(isRunning: Boolean) {
-        searchButton.isEnabled = !isRunning
+        searchButton.isVisible = !isRunning
         progressView.isVisible = isRunning && adapter.deviceList.isEmpty()
         adapter.changeSearchState(isRunning)
     }
