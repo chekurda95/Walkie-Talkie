@@ -25,7 +25,7 @@ internal class ConnectionButton @JvmOverloads constructor(
 
     enum class ButtonState(val text: String, @DrawableRes val backgroundRes: Int) {
         CONNECT_SUGGESTION("Connect".uppercase(), R.drawable.connect_ripple_button_background),
-        DISCONNECT_SUGGESTION("Disconnect".uppercase(), R.drawable.disconnect_button_background),
+        DISCONNECT_SUGGESTION("Disconnect".uppercase(), R.drawable.disconnect_ripple_button_background),
         WAITING_CONNECTION("Connecting".uppercase(), R.drawable.connect_ripple_button_background)
     }
 
