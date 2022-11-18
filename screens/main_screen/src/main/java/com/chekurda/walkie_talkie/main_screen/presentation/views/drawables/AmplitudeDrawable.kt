@@ -57,7 +57,6 @@ internal class AmplitudeDrawable(private val paint: Paint) : Drawable() {
     @FloatRange(from = 0.0, to = 1.0)
     var amplitude: Float = 0f
         set(value) {
-            if (field == value) return
             field = value
             val animatedAmplitudeDelta = value - animatedAmplitude
             val animationTime = if (value > animatedAmplitude) EXPAND_ANIMATION_TIME_MS else COLLAPSE_ANIMATION_TIME_MS
@@ -75,6 +74,11 @@ internal class AmplitudeDrawable(private val paint: Paint) : Drawable() {
         animatePulsation = false
         isRunning = false
         setVisible(true, false)
+    }
+
+    init {
+        isRunning = true
+        amplitude = 0f
     }
 
     fun setColor(@ColorInt color: Int, alpha: Int) {
