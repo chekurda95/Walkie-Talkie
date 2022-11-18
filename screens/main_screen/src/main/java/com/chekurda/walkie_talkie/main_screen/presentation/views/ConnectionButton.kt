@@ -9,11 +9,9 @@ import android.util.AttributeSet
 import android.view.View
 import android.view.ViewOutlineProvider
 import androidx.annotation.DrawableRes
-import androidx.appcompat.widget.AppCompatButton
 import androidx.core.content.ContextCompat
 import com.chekurda.common.half
 import com.chekurda.design.custom_view_tools.TextLayout
-import com.chekurda.design.custom_view_tools.utils.MeasureSpecUtils
 import com.chekurda.design.custom_view_tools.utils.MeasureSpecUtils.measureDirection
 import com.chekurda.design.custom_view_tools.utils.dp
 import com.chekurda.design.custom_view_tools.utils.safeRequestLayout
@@ -26,9 +24,9 @@ internal class ConnectionButton @JvmOverloads constructor(
 ) : View(context, attrs) {
 
     enum class ButtonState(val text: String, @DrawableRes val backgroundRes: Int) {
-        CONNECT_SUGGESTION("Connect".uppercase(), R.drawable.connect_button_background),
+        CONNECT_SUGGESTION("Connect".uppercase(), R.drawable.connect_ripple_button_background),
         DISCONNECT_SUGGESTION("Disconnect".uppercase(), R.drawable.disconnect_button_background),
-        WAITING_CONNECTION("Connecting".uppercase(), R.drawable.connect_button_background)
+        WAITING_CONNECTION("Connecting".uppercase(), R.drawable.connect_ripple_button_background)
     }
 
     private val textLayout = TextLayout {

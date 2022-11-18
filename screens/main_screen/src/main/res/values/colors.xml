@@ -19,8 +19,10 @@
     <item name="connection_info_background_color" type="color">#5188C1</item>
     <item name="record_button_background_color" type="color">#5188C1</item>
     <item name="connect_button_background_color" type="color">#388E3C</item>
+    <item name="connect_button_background_pressed_color" type="color">#2B6C2E</item>
     <item name="disconnect_button_background_color" type="color">#E9593E</item>
     <item name="border_stroke_color" type="color">#4D151414</item>
+    <item name="ripple_color" type="color">#22070707</item>
 
 
 </resources>
