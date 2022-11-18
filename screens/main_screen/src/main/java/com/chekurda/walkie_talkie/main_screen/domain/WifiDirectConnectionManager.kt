@@ -54,8 +54,7 @@ internal class WifiDirectConnectionManager(
         add(prepareSocketDisposable)
     }
     private var isGroupConnected = false
-    private var deviceList: List<WifiP2pDevice> = emptyList()
-    private var connectedDeviceAddress: String? = null
+    private var connectedDevice: WifiP2pDevice? = null
 
     private val wifiReceiver = WifiDirectReceiver(
         object : WifiDirectReceiver.ProcessListener {
@@ -68,7 +67,7 @@ internal class WifiDirectConnectionManager(
 
             override fun onConnectionChanged(isConnected: Boolean) {
                 when {
-                    isConnected -> manager?.requestConnectionInfo(channel, ::prepareSocket)
+                    isConnected -> manager?.requestConnectionInfo(channel, ::onGroupConnected)
                     isGroupConnected -> disconnect(isError = true)
                     else -> startSearchDevices()
                 }
@@ -92,8 +91,7 @@ internal class WifiDirectConnectionManager(
         disconnect()
         this.manager = null
         this.channel = null
-        deviceList = emptyList()
-        connectedDeviceAddress = null
+        connectedDevice = null
     }
 
     fun startSearchDevices() {
@@ -122,18 +120,20 @@ internal class WifiDirectConnectionManager(
         })
     }
 
-    fun connect(address: String) {
-        Log.e("TAGTAG", "try connect address $address")
+    fun connect(device: WifiP2pDevice) {
+        Log.e("TAGTAG", "try connect address $device")
         prepareSocketDisposable.set(null)
         connectDisposable.set(null)
         Observable.timer(CONNECTION_WAITING_TIMEOUT_SEC, TimeUnit.SECONDS)
             .observeOn(AndroidSchedulers.mainThread())
             .doOnSubscribe {
+                connectedDevice = device
                 checkNotNull(manager).connect(
                     channel,
                     WifiP2pConfig().apply {
-                        deviceAddress = address
+                        deviceAddress = device.deviceAddress
                         wps.setup = WpsInfo.PBC
+                        groupOwnerIntent = 15
                     },
                     object : ActionListener {
                         override fun onSuccess() {
@@ -186,6 +186,17 @@ internal class WifiDirectConnectionManager(
         processListener = null
     }
 
+    private fun onGroupConnected(connectionInfo: WifiP2pInfo) {
+        if (connectionInfo.isGroupOwner) {
+            prepareSocket(connectionInfo)
+        } else {
+            manager?.requestGroupInfo(channel) {
+                connectedDevice = it.owner
+                prepareSocket(connectionInfo)
+            }
+        }
+    }
+
     private fun prepareSocket(connectionInfo: WifiP2pInfo) {
         Single.fromCallable {
             var serverSocket: ServerSocket? = null
@@ -222,9 +233,9 @@ internal class WifiDirectConnectionManager(
         Log.e("TAGTAG", "onConnected")
         connectDisposable.set(null)
         isConnected = true
-        val connectedDevice = deviceList.find { it.deviceAddress == connectedDeviceAddress }
+        val connectedDevice = connectedDevice
             ?: WifiP2pDevice().apply {
-                deviceAddress = connectedDeviceAddress.orEmpty()
+                deviceAddress = ""
                 deviceName = "UNKNOWN"
             }
         processListener?.onConnectionSuccess(connectedDevice)
@@ -238,7 +249,7 @@ internal class WifiDirectConnectionManager(
         prepareSocketDisposable.set(null)
         isConnected = false
         isGroupConnected = false
-        connectedDeviceAddress = null
+        connectedDevice = null
         audioStreamer.disconnect()
         processListener?.onConnectionCanceled(isError = isError)
     }
@@ -278,12 +289,7 @@ private class WifiDirectReceiver(
     }
 }
 
-private val emptyManagerListener = object : ActionListener {
-    override fun onSuccess() = Unit
-    override fun onFailure(reason: Int) = Unit
-}
-
-private const val SERVER_PREPARING_TIMEOUT_MS = 2000L
+private const val SERVER_PREPARING_TIMEOUT_MS = 1000L
 private const val CONNECTION_WAITING_TIMEOUT_SEC = 25L
 private const val CONNECTION_PORT = 6542
 private const val BACKLOG = 50

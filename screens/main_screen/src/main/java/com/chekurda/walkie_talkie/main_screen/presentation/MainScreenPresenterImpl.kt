@@ -57,7 +57,12 @@ internal class MainScreenPresenterImpl(
     }
 
     override fun onDeviceItemClicked(deviceInfo: DeviceInfo) {
-        wifiDirectManager.connect(deviceInfo.address)
+        wifiDirectManager.connect(
+            WifiP2pDevice().apply {
+                deviceAddress = deviceInfo.address
+                deviceName = deviceInfo.name
+            }
+        )
         view?.changeDeviceListVisibility(isVisible = false)
     }
 

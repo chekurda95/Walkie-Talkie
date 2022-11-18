@@ -110,7 +110,6 @@ internal class RecordButtonView @JvmOverloads constructor(
 
     init {
         showingFraction = 1f
-        amplitude = 0.01f
     }
 
     /**

@@ -49,7 +49,7 @@ internal class AmplitudeDrawable(private val paint: Paint) : Drawable() {
     private var pulsationProgress = 0f
     private val pulsationInterpolator = AccelerateDecelerateInterpolator()
     private var pulseStableAmplitude = 0f
-    private var isRunning: Boolean = false
+    private var isRunning: Boolean = true
 
     var animatedAmplitude = 0f
         private set

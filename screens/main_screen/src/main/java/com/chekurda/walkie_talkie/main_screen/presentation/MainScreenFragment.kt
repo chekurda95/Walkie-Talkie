@@ -18,6 +18,8 @@ import com.chekurda.walkie_talkie.main_screen.domain.AudioStreamer
 import com.chekurda.walkie_talkie.main_screen.domain.WifiDirectConnectionManager
 import com.chekurda.walkie_talkie.main_screen.presentation.views.ConnectionButton
 import com.chekurda.walkie_talkie.main_screen.presentation.views.ConnectionButton.*
+import com.chekurda.walkie_talkie.main_screen.presentation.views.ConnectionInfoView
+import com.chekurda.walkie_talkie.main_screen.presentation.views.ConnectionInfoView.ConnectionInfo
 import com.chekurda.walkie_talkie.main_screen.presentation.views.RecordButtonView
 import com.chekurda.walkie_talkie.main_screen.presentation.views.device_picker.DevicePickerView
 import com.chekurda.walkie_talkie.main_screen.utils.PermissionsHelper
@@ -36,6 +38,7 @@ internal class MainScreenFragment : BasePresenterFragment<MainScreenContract.Vie
     private var connectionButton: ConnectionButton? = null
     private var recordButton: RecordButtonView? = null
     private var devicePicker: DevicePickerView? = null
+    private var connectionInfoView: ConnectionInfoView? = null
 
     private var permissionsHelper: PermissionsHelper? = null
     private var deviceHelper: RecordingDeviceHelper? = null
@@ -84,6 +87,7 @@ internal class MainScreenFragment : BasePresenterFragment<MainScreenContract.Vie
                 true
             }
         }
+        connectionInfoView = view.findViewById(R.id.connection_info_view)
     }
 
     override fun onStart() {
@@ -135,6 +139,10 @@ internal class MainScreenFragment : BasePresenterFragment<MainScreenContract.Vie
     override fun showConnectedState(connectedDevice: DeviceInfo) {
         connectionButton?.buttonState = ButtonState.DISCONNECT_SUGGESTION
         recordButton?.isEnabled = true
+        connectionInfoView?.connectionData = ConnectionInfo(
+            deviceName = connectedDevice.name,
+            isConnected = true
+        )
     }
 
     override fun showConnectionError() {
@@ -148,6 +156,7 @@ internal class MainScreenFragment : BasePresenterFragment<MainScreenContract.Vie
     private fun clearState() {
         connectionButton?.buttonState = ButtonState.CONNECT_SUGGESTION
         recordButton?.isEnabled = false
+        connectionInfoView?.connectionData = ConnectionInfo()
     }
 
     override fun onInputAmplitudeChanged(amplitude: Float) {
