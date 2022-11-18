@@ -22,7 +22,6 @@ import io.reactivex.disposables.CompositeDisposable
 import io.reactivex.disposables.SerialDisposable
 import io.reactivex.schedulers.Schedulers
 import java.lang.IllegalStateException
-import java.net.ConnectException
 import java.net.InetSocketAddress
 import java.net.ServerSocket
 import java.net.Socket
@@ -63,16 +62,15 @@ internal class WifiDirectConnectionManager(
 
             override fun onPeersChanged() {
                 manager?.requestPeers(channel) { peerList ->
-                    if (deviceList.isNotEmpty()) deviceList = peerList.deviceList.toList()
                     processListener?.onPeersChanged(peerList.deviceList.toList())
                 }
             }
 
             override fun onConnectionChanged(isConnected: Boolean) {
-                if (isConnected) {
-                    manager?.requestConnectionInfo(channel, ::prepareSocket)
-                } else if (isGroupConnected) {
-                    disconnect(isError = true)
+                when {
+                    isConnected -> manager?.requestConnectionInfo(channel, ::prepareSocket)
+                    isGroupConnected -> disconnect(isError = true)
+                    else -> startSearchDevices()
                 }
                 isGroupConnected = isConnected
             }
@@ -99,13 +97,29 @@ internal class WifiDirectConnectionManager(
     }
 
     fun startSearchDevices() {
-        checkNotNull(manager).discoverPeers(channel, emptyManagerListener)
-        processListener?.onSearchStateChanged(isRunning = true)
+        Log.e("TAGTAG", "startSearchDevices")
+        checkNotNull(manager).discoverPeers(channel, object : ActionListener {
+            override fun onSuccess() {
+                processListener?.onSearchStateChanged(isRunning = true)
+            }
+            override fun onFailure(reason: Int) {
+                stopSearchDevices()
+            }
+        })
     }
 
     fun stopSearchDevices() {
-        checkNotNull(manager).stopPeerDiscovery(channel, emptyManagerListener)
-        processListener?.onSearchStateChanged(isRunning = false)
+        Log.e("TAGTAG", "stopSearchDevices")
+        checkNotNull(manager).stopPeerDiscovery(channel, object : ActionListener {
+            val callback = { processListener?.onSearchStateChanged(isRunning = false) }
+            override fun onSuccess() {
+                callback()
+            }
+
+            override fun onFailure(reason: Int) {
+                callback()
+            }
+        })
     }
 
     fun connect(address: String) {
@@ -178,9 +192,13 @@ internal class WifiDirectConnectionManager(
             var socket: Socket? = null
             try {
                 if (connectionInfo.isGroupOwner) {
+                    Log.e("TAGTAG", "ServerSocket connect")
                     serverSocket = ServerSocket(CONNECTION_PORT, BACKLOG, connectionInfo.groupOwnerAddress)
                     socket = serverSocket.accept()
                 } else {
+                    // Гарантируем, что клиент будет подключаться после готовности нового ServerSocket.
+                    Thread.sleep(SERVER_PREPARING_TIMEOUT_MS)
+                    Log.e("TAGTAG", "Socket connect")
                     val address = InetSocketAddress(connectionInfo.groupOwnerAddress, CONNECTION_PORT)
                     socket = Socket().apply { connect(address, CONNECTION_TIMEOUT) }
                 }
@@ -189,7 +207,8 @@ internal class WifiDirectConnectionManager(
                 socket?.close()
                 serverSocket?.close()
             }
-            if (socket == null) throw IllegalStateException()
+            if (socket == null) throw IllegalStateException("Socket is null")
+            else if (socket.isClosed) throw IllegalStateException("Socket is closed")
             socket
         }.subscribeOn(Schedulers.io())
             .observeOn(AndroidSchedulers.mainThread())
@@ -264,6 +283,7 @@ private val emptyManagerListener = object : ActionListener {
     override fun onFailure(reason: Int) = Unit
 }
 
+private const val SERVER_PREPARING_TIMEOUT_MS = 2000L
 private const val CONNECTION_WAITING_TIMEOUT_SEC = 25L
 private const val CONNECTION_PORT = 6542
 private const val BACKLOG = 50

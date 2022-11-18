@@ -1,6 +1,7 @@
 package com.chekurda.walkie_talkie.main_screen.presentation
 
 import android.net.wifi.p2p.WifiP2pDevice
+import android.util.Log
 import com.chekurda.common.base_fragment.BasePresenterImpl
 import com.chekurda.walkie_talkie.main_screen.data.DeviceInfo
 import com.chekurda.walkie_talkie.main_screen.data.deviceInfo
@@ -17,7 +18,6 @@ internal class MainScreenPresenterImpl(
     private var deviceInfoList: List<DeviceInfo> = emptyList()
     private var isConnected: Boolean = false
     private var hasPermissions: Boolean = false
-    private var isListening: Boolean = true
 
     init {
         wifiDirectManager.apply {
@@ -81,13 +81,16 @@ internal class MainScreenPresenterImpl(
     }
 
     override fun onPeersChanged(devices: List<WifiP2pDevice>) {
-        if (devices.isEmpty() && deviceInfoList.isNotEmpty()) return
         deviceInfoList = devices.map { it.deviceInfo }
         view?.updateDeviceList(deviceInfoList)
     }
 
     override fun onSearchStateChanged(isRunning: Boolean) {
+        Log.e("TAGTAG", "onSearchStateChanged $isRunning")
         view?.changeSearchState(isRunning)
+        if (hasPermissions && !isRunning && !isConnected) {
+            wifiDirectManager.startSearchDevices()
+        }
     }
 
     override fun onConnectionSuccess(device: WifiP2pDevice) {

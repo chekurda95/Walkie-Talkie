@@ -5,11 +5,11 @@ import android.graphics.Canvas
 import android.graphics.Color
 import android.graphics.Outline
 import android.util.AttributeSet
+import android.util.Log
 import android.view.View
 import android.view.View.MeasureSpec.makeMeasureSpec
 import android.view.ViewOutlineProvider
 import android.view.ViewPropertyAnimator
-import android.widget.Button
 import android.widget.FrameLayout
 import android.widget.ProgressBar
 import androidx.core.view.isVisible
@@ -18,11 +18,9 @@ import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.chekurda.common.half
 import com.chekurda.design.custom_view_tools.utils.MeasureSpecUtils.makeExactlySpec
-import com.chekurda.design.custom_view_tools.utils.MeasureSpecUtils.makeUnspecifiedSpec
 import com.chekurda.design.custom_view_tools.utils.MeasureSpecUtils.measureDirection
 import com.chekurda.design.custom_view_tools.utils.dp
 import com.chekurda.design.custom_view_tools.utils.layout
-import com.chekurda.walkie_talkie.main_screen.R
 import com.chekurda.walkie_talkie.main_screen.data.DeviceInfo
 import com.chekurda.walkie_talkie.main_screen.presentation.views.device_picker.holder.DeviceViewHolder
 import com.chekurda.walkie_talkie.main_screen.presentation.views.drawables.BlurBehindDrawable
@@ -43,7 +41,11 @@ internal class DevicePickerView @JvmOverloads constructor(
         itemActionListener?.onDeviceItemClicked(deviceInfo)
     }
     private val recyclerView = RecyclerView(context).apply {
-        layoutManager = LinearLayoutManager(context)
+        layoutManager = object : LinearLayoutManager(context) {
+            override fun onLayoutChildren(recycler: RecyclerView.Recycler, state: RecyclerView.State) {
+                kotlin.runCatching { super.onLayoutChildren(recycler, state) }
+            }
+        }
         adapter = this@DevicePickerView.adapter
         setBackgroundColor(Color.WHITE)
         outlineProvider = object : ViewOutlineProvider() {
@@ -57,6 +59,7 @@ internal class DevicePickerView @JvmOverloads constructor(
 
     private val progressView = ProgressBar(context)
     private val progressSize = dp(30)
+    private var isSearchRunning: Boolean = false
 
     var itemActionListener: DeviceViewHolder.ActionListener? = null
 
@@ -96,16 +99,17 @@ internal class DevicePickerView @JvmOverloads constructor(
             .apply { start() }
     }
 
-    fun changeSearchState(isRunning: Boolean) {
-        progressView.isVisible = isRunning && adapter.deviceList.isEmpty()
+    fun updateSearchState(isRunning: Boolean) {
+        isSearchRunning = isRunning
+        progressView.isVisible = isSearchRunning && adapter.deviceList.isEmpty()
         adapter.changeSearchState(isRunning)
+        Log.e("TAGTAG", "DevicePicker changeSearchState ${progressView.isVisible}, isRunning = $isRunning, deviceListSize = ${adapter.deviceList.size}")
     }
 
     fun updateDeviceList(deviceInfoList: List<DeviceInfo>) {
+        Log.e("TAGTAG", "DevicePicker updateDeviceList ${deviceInfoList.size}")
         adapter.setDataList(deviceInfoList)
-        if (progressView.isVisible && deviceInfoList.isNotEmpty()) {
-            progressView.isVisible = false
-        }
+        updateSearchState(isRunning = isSearchRunning)
     }
 
     override fun onMeasure(widthMeasureSpec: Int, heightMeasureSpec: Int) {

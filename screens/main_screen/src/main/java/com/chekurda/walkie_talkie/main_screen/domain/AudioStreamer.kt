@@ -6,6 +6,7 @@ import android.media.AudioRecord
 import android.media.AudioTrack
 import android.media.MediaRecorder
 import android.os.Build
+import android.util.Log
 import androidx.annotation.WorkerThread
 import java.net.Socket
 import java.nio.BufferUnderflowException
@@ -55,6 +56,14 @@ internal class AudioStreamer {
     fun disconnect() {
         isConnected = false
         isListening = true
+        kotlin.runCatching {
+            recorder?.release()
+            recorder = null
+        }
+        kotlin.runCatching {
+            track?.release()
+            track = null
+        }
     }
 
     private fun prepareAudioTrack(): AudioTrack {
@@ -104,7 +113,12 @@ internal class AudioStreamer {
                             amplitudeListener?.onInputAmplitudeChanged(getAmplitude(byteArray, byteArray.size))
                         }
                     }
-                }.apply { if (isFailure) onDisconnect() }
+                }.apply {
+                    if (isFailure) {
+                        Log.e("TAGTAG", "audioPlayerThread ${exceptionOrNull()}")
+                        onDisconnect()
+                    }
+                }
                 isConnected = false
                 socket.close()
             }
@@ -119,12 +133,17 @@ internal class AudioStreamer {
                     val outputStream = socket.getOutputStream()
                     while (isConnected) {
                         if (!isListening) {
-                            val length = recorder!!.read(byteArray, 0, byteArray.size)
+                            recorder!!.read(byteArray, 0, byteArray.size)
                             outputStream.write(byteArray)
                             amplitudeListener?.onOutputAmplitudeChanged(getAmplitude(byteArray, byteArray.size))
                         }
                     }
-                }.apply { if (isFailure) onDisconnect() }
+                }.apply {
+                    if (isFailure) {
+                        Log.e("TAGTAG", "audioRecordThread ${exceptionOrNull()}")
+                        onDisconnect()
+                    }
+                }
                 isConnected = false
                 socket.close()
             }

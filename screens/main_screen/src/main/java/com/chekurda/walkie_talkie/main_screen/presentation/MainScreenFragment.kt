@@ -17,7 +17,6 @@ import com.chekurda.walkie_talkie.main_screen.domain.AudioStreamer
 import com.chekurda.walkie_talkie.main_screen.domain.WifiDirectConnectionManager
 import com.chekurda.walkie_talkie.main_screen.presentation.views.ConnectionButton
 import com.chekurda.walkie_talkie.main_screen.presentation.views.ConnectionButton.*
-import com.chekurda.walkie_talkie.main_screen.presentation.views.device_picker.DeviceListAdapter
 import com.chekurda.walkie_talkie.main_screen.presentation.views.RecordButtonView
 import com.chekurda.walkie_talkie.main_screen.presentation.views.device_picker.DevicePickerView
 import com.chekurda.walkie_talkie.main_screen.utils.PermissionsHelper
@@ -123,7 +122,7 @@ internal class MainScreenFragment : BasePresenterFragment<MainScreenContract.Vie
     }
 
     override fun changeSearchState(isRunning: Boolean) {
-        devicePicker?.changeSearchState(isRunning)
+        devicePicker?.updateSearchState(isRunning)
     }
 
     override fun showConnectionWaiting() {
