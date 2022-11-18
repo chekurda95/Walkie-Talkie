@@ -5,13 +5,13 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:fitsSystemWindows="false"
-    android:background="@color/main_background_color">
+    android:background="@drawable/main_screen_background">
 
     <com.chekurda.walkie_talkie.main_screen.presentation.views.ConnectionInfoView
         android:id="@+id/connection_info_view"
         android:layout_width="match_parent"
         android:layout_height="200dp"
-        android:layout_marginTop="25dp"
+        android:layout_marginTop="35dp"
         android:layout_marginHorizontal="25dp"
         android:background="@drawable/connection_info_background"
         app:layout_constraintTop_toTopOf="parent"

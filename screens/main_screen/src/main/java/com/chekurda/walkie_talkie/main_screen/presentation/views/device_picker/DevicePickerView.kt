@@ -2,7 +2,6 @@ package com.chekurda.walkie_talkie.main_screen.presentation.views.device_picker
 
 import android.content.Context
 import android.graphics.Canvas
-import android.graphics.Color
 import android.graphics.Outline
 import android.util.AttributeSet
 import android.util.Log
@@ -12,6 +11,7 @@ import android.view.ViewOutlineProvider
 import android.view.ViewPropertyAnimator
 import android.widget.FrameLayout
 import android.widget.ProgressBar
+import androidx.core.content.ContextCompat
 import androidx.core.view.isVisible
 import androidx.core.view.updatePadding
 import androidx.recyclerview.widget.LinearLayoutManager
@@ -21,6 +21,7 @@ import com.chekurda.design.custom_view_tools.utils.MeasureSpecUtils.makeExactlyS
 import com.chekurda.design.custom_view_tools.utils.MeasureSpecUtils.measureDirection
 import com.chekurda.design.custom_view_tools.utils.dp
 import com.chekurda.design.custom_view_tools.utils.layout
+import com.chekurda.walkie_talkie.main_screen.R
 import com.chekurda.walkie_talkie.main_screen.data.DeviceInfo
 import com.chekurda.walkie_talkie.main_screen.presentation.views.device_picker.holder.DeviceViewHolder
 import com.chekurda.walkie_talkie.main_screen.presentation.views.drawables.BlurBehindDrawable
@@ -47,12 +48,8 @@ internal class DevicePickerView @JvmOverloads constructor(
             }
         }
         adapter = this@DevicePickerView.adapter
-        setBackgroundColor(Color.WHITE)
-        outlineProvider = object : ViewOutlineProvider() {
-            override fun getOutline(view: View, outline: Outline) {
-                outline.setRoundRect(0, 0, view.width, view.height, dp(12).toFloat())
-            }
-        }
+        background = ContextCompat.getDrawable(context, R.drawable.device_picker_backround)!!
+        outlineProvider = ViewOutlineProvider.BACKGROUND
         clipToOutline = true
         clipToPadding = false
     }

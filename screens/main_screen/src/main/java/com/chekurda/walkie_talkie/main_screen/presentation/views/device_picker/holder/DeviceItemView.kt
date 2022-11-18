@@ -7,6 +7,7 @@ import android.view.View
 import android.view.ViewGroup
 import android.view.ViewGroup.LayoutParams.MATCH_PARENT
 import android.view.ViewGroup.LayoutParams.WRAP_CONTENT
+import androidx.core.content.ContextCompat
 import androidx.core.view.updatePadding
 import com.chekurda.common.half
 import com.chekurda.design.custom_view_tools.TextLayout
@@ -15,6 +16,7 @@ import com.chekurda.design.custom_view_tools.utils.PAINT_MAX_ALPHA
 import com.chekurda.design.custom_view_tools.utils.SimpleTextPaint
 import com.chekurda.design.custom_view_tools.utils.dp
 import com.chekurda.design.custom_view_tools.utils.safeRequestLayout
+import com.chekurda.walkie_talkie.main_screen.R
 import com.chekurda.walkie_talkie.main_screen.data.DeviceInfo
 import kotlin.math.roundToInt
 

@@ -16,11 +16,11 @@
     <item name="connection_info_background_color" type="color">#6A8A82</item>-->
 
     <item name="main_background_color" type="color">#0C1F26</item>
-    <item name="connection_info_background_color" type="color">#597B97</item>
+    <item name="connection_info_background_color" type="color">#5188C1</item>
     <item name="record_button_background_color" type="color">#5188C1</item>
     <item name="connect_button_background_color" type="color">#388E3C</item>
     <item name="disconnect_button_background_color" type="color">#E9593E</item>
-    <item name="record_amplitude_background_color" type="color">#325474</item>
+    <item name="border_stroke_color" type="color">#4D151414</item>
 
 
 </resources>
