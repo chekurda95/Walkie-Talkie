@@ -7,6 +7,7 @@ import android.content.Context
 import android.os.Bundle
 import android.view.MotionEvent
 import android.view.View
+import androidx.activity.OnBackPressedCallback
 import androidx.fragment.app.Fragment
 import androidx.recyclerview.widget.RecyclerView
 import com.chekurda.common.base_fragment.BasePresenterFragment
@@ -48,6 +49,7 @@ internal class MainScreenFragment : BasePresenterFragment<MainScreenContract.Vie
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
         initViews(view)
+        addBackStackCallback()
     }
 
     @SuppressLint("ClickableViewAccessibility")
@@ -160,6 +162,20 @@ internal class MainScreenFragment : BasePresenterFragment<MainScreenContract.Vie
     }
 
     override fun provideActivity(): Activity = requireActivity()
+
+    private fun addBackStackCallback() {
+        requireActivity().onBackPressedDispatcher.addCallback(
+            viewLifecycleOwner,
+            object : OnBackPressedCallback(true) {
+                override fun handleOnBackPressed() {
+                    if (devicePicker?.hide() == false) {
+                        isEnabled = false
+                        requireActivity().onBackPressed()
+                    }
+                }
+            }
+        )
+    }
 
     /**
      * DI Press F.

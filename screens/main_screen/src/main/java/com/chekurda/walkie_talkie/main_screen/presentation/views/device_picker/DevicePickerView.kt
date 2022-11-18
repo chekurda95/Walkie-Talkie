@@ -58,7 +58,7 @@ internal class DevicePickerView @JvmOverloads constructor(
     }
 
     private val progressView = ProgressBar(context)
-    private val progressSize = dp(30)
+    private val progressSize = dp(40)
     private var isSearchRunning: Boolean = false
 
     var itemActionListener: DeviceViewHolder.ActionListener? = null
@@ -70,8 +70,8 @@ internal class DevicePickerView @JvmOverloads constructor(
         updatePadding(left = dp(25), right = dp(25))
     }
 
-    fun show() {
-        if (isVisible) return
+    fun show(): Boolean {
+        if (isVisible) return false
         alphaAnimator?.cancel()
         isVisible = true
         alpha = 0f
@@ -83,10 +83,11 @@ internal class DevicePickerView @JvmOverloads constructor(
             }.apply { start() }
         blurDrawable.show(true)
         blurDrawable.invalidate()
+        return true
     }
 
-    fun hide() {
-        if (!isVisible) return
+    fun hide(): Boolean {
+        if (!isVisible) return false
         alphaAnimator?.cancel()
         alphaAnimator = animate().alpha(0f)
             .setDuration(250)
@@ -97,6 +98,7 @@ internal class DevicePickerView @JvmOverloads constructor(
                 alphaAnimator = null
             }
             .apply { start() }
+        return true
     }
 
     fun updateSearchState(isRunning: Boolean) {
