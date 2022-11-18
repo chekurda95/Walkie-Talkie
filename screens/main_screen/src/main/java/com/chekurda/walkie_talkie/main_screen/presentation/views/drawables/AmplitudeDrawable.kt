@@ -144,6 +144,8 @@ internal class AmplitudeDrawable(private val paint: Paint) : Drawable() {
                 amplitudeChangingSpeed = 0f
                 animatePulsation = true
                 pulseStableAmplitude = 0f
+                pulsationProgress = 0f
+                isPulseGrowing = true
             }
         }
     }

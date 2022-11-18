@@ -75,6 +75,7 @@ internal class MainScreenFragment : BasePresenterFragment<MainScreenContract.Vie
                     MotionEvent.ACTION_CANCEL,
                     MotionEvent.ACTION_UP -> {
                         view.isPressed = false
+                        recordButton?.animateAmplitudeCancel()
                         presenter.onVoiceButtonStateChanged(isPressed = false)
                     }
                 }
@@ -153,7 +154,8 @@ internal class MainScreenFragment : BasePresenterFragment<MainScreenContract.Vie
 
     override fun onOutputAmplitudeChanged(amplitude: Float) {
         view?.post {
-            recordButton?.amplitude = amplitude.takeIf { recordButton?.isPressed == true } ?: 0f
+            if (recordButton?.isPressed == false) return@post
+            recordButton?.amplitude = amplitude
         }
     }
 

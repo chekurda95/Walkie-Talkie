@@ -1,5 +1,6 @@
 package com.chekurda.walkie_talkie.main_screen.presentation.views
 
+import android.animation.ValueAnimator
 import android.content.Context
 import android.content.res.Resources
 import android.graphics.Canvas
@@ -9,11 +10,11 @@ import android.graphics.Typeface
 import android.graphics.drawable.Drawable
 import android.text.Layout
 import android.util.AttributeSet
-import android.view.HapticFeedbackConstants
 import android.view.View
 import android.view.animation.AccelerateInterpolator
 import android.view.animation.DecelerateInterpolator
 import androidx.annotation.FloatRange
+import androidx.core.animation.doOnEnd
 import androidx.core.content.ContextCompat
 import androidx.core.graphics.drawable.updateBounds
 import androidx.core.graphics.withScale
@@ -70,6 +71,7 @@ internal class RecordButtonView @JvmOverloads constructor(
     private var backgroundScale: Float = 0f
     private val scaleOnInterpolator = DecelerateInterpolator()
     private val scaleOffInterpolator = AccelerateInterpolator()
+    private var amplitudeAnimator: ValueAnimator? = null
 
     /**
      * Амплитуда громкости микрофона.
@@ -77,6 +79,7 @@ internal class RecordButtonView @JvmOverloads constructor(
     @get:FloatRange(from = 0.0, to = 1.0)
     var amplitude: Float = 0f
         set(value) {
+            amplitudeAnimator?.cancel()
             val rangedValue = value.coerceAtMost(1f).coerceAtLeast(0f)
             if (field == rangedValue) return
             field = rangedValue
@@ -177,6 +180,20 @@ internal class RecordButtonView @JvmOverloads constructor(
 
     override fun verifyDrawable(who: Drawable): Boolean =
         who == amplitudeDrawable || super.verifyDrawable(who)
+
+    fun animateAmplitudeCancel() {
+        amplitudeAnimator?.cancel()
+        val currentAmplitude = amplitude
+        ValueAnimator.ofFloat(0f, 1f).apply {
+            amplitudeAnimator = this
+            duration = 300
+            addUpdateListener {
+                amplitudeDrawable.amplitude = currentAmplitude * scaleOffInterpolator.getInterpolation(1f - it.animatedFraction)
+            }
+            doOnEnd { amplitude = 0f }
+            start()
+        }
+    }
 
     /**
      * Размеры внутренней разметки кнопки записи [RecordButtonView].
