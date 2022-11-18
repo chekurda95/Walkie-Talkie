@@ -61,12 +61,11 @@ internal class DeviceListAdapter(
     }
 
     override fun getItemCount(): Int = deviceList.size + if (isSearch && deviceList.isNotEmpty()) 1 else 0
-    override fun getItemViewType(position: Int): Int =
-        when {
-            position <= deviceList.lastIndex -> DEVICE_VIEW_HOLDER_TYPE
-            position == progressItemIndex -> PROGRESS_VIEW_HOLDER_TYPE
-            else -> -1
-        }
+    override fun getItemViewType(position: Int): Int = when {
+        position <= deviceList.lastIndex -> DEVICE_VIEW_HOLDER_TYPE
+        position == progressItemIndex -> PROGRESS_VIEW_HOLDER_TYPE
+        else -> -1
+    }
 }
 
 private class ProgressItemView(context: Context): FrameLayout(context) {
