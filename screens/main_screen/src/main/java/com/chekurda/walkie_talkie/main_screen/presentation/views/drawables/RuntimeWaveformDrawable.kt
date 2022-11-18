@@ -7,7 +7,6 @@ import android.graphics.Paint
 import android.graphics.PixelFormat
 import android.graphics.Rect
 import android.graphics.drawable.Drawable
-import android.util.Log
 import android.view.View
 import androidx.annotation.FloatRange
 import androidx.core.graphics.withTranslation
@@ -37,6 +36,7 @@ internal class RuntimeWaveformDrawable(private val view: View) : Drawable() {
     private var rectWidth = 0
     private var isRunning = false
     private var minHeight = 0
+    private var skipFrame = false
 
     override fun getIntrinsicWidth(): Int = bounds.width()
     override fun getIntrinsicHeight(): Int = bounds.height()
@@ -51,8 +51,7 @@ internal class RuntimeWaveformDrawable(private val view: View) : Drawable() {
     }
 
     override fun draw(canvas: Canvas) {
-        Log.e("TAGTAG", "draw")
-        if (isRunning) {
+        if (isRunning && !skipFrame) {
             amplitudes.removeFirst().apply {
                 update(top = bounds.bottom - (bounds.height() * amplitude).roundToInt())
                 amplitudes.addLast(this)
@@ -68,7 +67,10 @@ internal class RuntimeWaveformDrawable(private val view: View) : Drawable() {
             }
             right += rectWidth.toFloat()
         }
-        if (isRunning) invalidateSelf()
+        if (isRunning) {
+            skipFrame = !skipFrame
+            invalidateSelf()
+        }
     }
 
     override fun setAlpha(alpha: Int) = Unit
