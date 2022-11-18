@@ -4,7 +4,10 @@ import android.Manifest
 import android.annotation.SuppressLint
 import android.app.Activity
 import android.content.Context
+import android.content.Intent
+import android.net.wifi.WifiManager
 import android.os.Bundle
+import android.provider.Settings
 import android.view.MotionEvent
 import android.view.View
 import android.widget.Toast
@@ -35,7 +38,6 @@ internal class MainScreenFragment : BasePresenterFragment<MainScreenContract.Vie
 
     override val layoutRes: Int = R.layout.main_screen_fragment
 
-    private var recyclerView: RecyclerView? = null
     private var connectionButton: ConnectionButton? = null
     private var recordButton: RecordButtonView? = null
     private var devicePicker: DevicePickerView? = null
@@ -43,11 +45,13 @@ internal class MainScreenFragment : BasePresenterFragment<MainScreenContract.Vie
 
     private var permissionsHelper: PermissionsHelper? = null
     private var deviceHelper: RecordingDeviceHelper? = null
+    private var wifiManager: WifiManager? = null
 
     override fun onAttach(context: Context) {
         super.onAttach(context)
         permissionsHelper = PermissionsHelper(requireActivity(), permissions, PERMISSIONS_REQUEST_CODE)
         deviceHelper = RecordingDeviceHelper(requireActivity())
+        wifiManager = context.applicationContext.getSystemService(Context.WIFI_SERVICE) as WifiManager
     }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
@@ -65,9 +69,7 @@ internal class MainScreenFragment : BasePresenterFragment<MainScreenContract.Vie
         connectionButton = view.findViewById<ConnectionButton>(R.id.connect_button).apply {
             setOnClickListener {
                 when (connectionButton!!.buttonState) {
-                    ButtonState.CONNECT_SUGGESTION -> {
-                        permissionsHelper?.withPermissions { presenter.onConnectClicked() }
-                    }
+                    ButtonState.CONNECT_SUGGESTION -> onConnectButtonClicked()
                     ButtonState.DISCONNECT_SUGGESTION,
                     ButtonState.WAITING_CONNECTION -> presenter.onDisconnectClicked()
                 }
@@ -108,16 +110,17 @@ internal class MainScreenFragment : BasePresenterFragment<MainScreenContract.Vie
 
     override fun onDestroyView() {
         super.onDestroyView()
-        recyclerView = null
         connectionButton = null
         recordButton = null
         devicePicker = null
+        connectionInfoView = null
     }
 
     override fun onDetach() {
         super.onDetach()
         deviceHelper = null
         permissionsHelper = null
+        wifiManager = null
     }
 
     override fun changeDeviceListVisibility(isVisible: Boolean) {
@@ -171,6 +174,17 @@ internal class MainScreenFragment : BasePresenterFragment<MainScreenContract.Vie
         view?.post {
             if (recordButton?.isPressed == false) return@post
             recordButton?.amplitude = amplitude
+        }
+    }
+
+    private fun onConnectButtonClicked() {
+        permissionsHelper?.withPermissions {
+            if (wifiManager?.isWifiEnabled == true) {
+                presenter.onConnectClicked()
+            } else {
+                requireContext().startActivity(Intent(Settings.ACTION_WIFI_SETTINGS))
+                Toast.makeText(context, "Walkie-talkie require working Wi-Fi", Toast.LENGTH_LONG).show()
+            }
         }
     }
 
