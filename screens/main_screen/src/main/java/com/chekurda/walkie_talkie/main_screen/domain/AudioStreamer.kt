@@ -124,7 +124,7 @@ internal class AudioStreamer {
                     }
                 }.apply {
                     if (isFailure) {
-                        Log.e("TAGTAG", "audioPlayerThread ${exceptionOrNull()}")
+                        Log.e("AudioStreamer", "audioPlayerThread ${exceptionOrNull()}")
                         onDisconnect()
                     }
                 }
@@ -154,7 +154,7 @@ internal class AudioStreamer {
                     }
                 }.apply {
                     if (isFailure) {
-                        Log.e("TAGTAG", "audioRecordThread ${exceptionOrNull()}")
+                        Log.e("AudioStreamer", "audioRecordThread ${exceptionOrNull()}")
                         onDisconnect()
                     }
                 }

@@ -102,11 +102,11 @@ internal class DevicePickerView @JvmOverloads constructor(
         isSearchRunning = isRunning
         progressView.isVisible = isSearchRunning && adapter.deviceList.isEmpty()
         adapter.changeSearchState(isRunning)
-        Log.e("TAGTAG", "DevicePicker changeSearchState ${progressView.isVisible}, isRunning = $isRunning, deviceListSize = ${adapter.deviceList.size}")
+        Log.d("DevicePickerView", "DevicePicker changeSearchState ${progressView.isVisible}, isRunning = $isRunning, deviceListSize = ${adapter.deviceList.size}")
     }
 
     fun updateDeviceList(deviceInfoList: List<DeviceInfo>) {
-        Log.e("TAGTAG", "DevicePicker updateDeviceList ${deviceInfoList.size}")
+        Log.d("DevicePickerView", "DevicePicker updateDeviceList ${deviceInfoList.size}")
         adapter.setDataList(deviceInfoList)
         updateSearchState(isRunning = isSearchRunning)
     }

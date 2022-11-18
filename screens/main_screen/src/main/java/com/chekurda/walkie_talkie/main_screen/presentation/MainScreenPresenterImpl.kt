@@ -100,11 +100,11 @@ internal class MainScreenPresenterImpl(
     }
 
     override fun onSearchStateChanged(isRunning: Boolean) {
-        Log.e("TAGTAG", "onSearchStateChanged $isRunning")
         view?.changeSearchState(isRunning)
         if (hasPermissions && !isRunning && !isConnected) {
             wifiDirectManager.startSearchDevices()
         }
+        Log.d("onSearchStateChanged", "onSearchStateChanged $isRunning")
     }
 
     override fun onConnectionSuccess(device: WifiP2pDevice) {

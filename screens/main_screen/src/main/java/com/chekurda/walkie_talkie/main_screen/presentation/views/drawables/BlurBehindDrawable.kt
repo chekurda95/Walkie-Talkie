@@ -9,7 +9,6 @@ import android.graphics.drawable.ColorDrawable
 import android.os.Handler
 import android.os.Looper
 import android.os.SystemClock
-import android.util.Log
 import android.view.View
 import com.chekurda.design.custom_view_tools.utils.dp
 import java.util.concurrent.CountDownLatch
@@ -122,7 +121,6 @@ internal class BlurBehindDrawable(
                         )
                         blurCanvas!![i] = Canvas(blurredBitmapTmp!![i]!!)
                     } catch (e: Exception) {
-                        Log.e("TAGTAG", "", e)
                         runOnUIThread {
                             error = true
                             parentView.invalidate()
@@ -140,7 +138,6 @@ internal class BlurBehindDrawable(
                 var backDrawable = behindView.background
                 if (backDrawable == null) {
                     backDrawable = ColorDrawable(Color.WHITE)
-                    Log.e("TAGTAG", "backDrawable is null 152")
                 }
                 behindView.setTag(TAG_DRAWING_AS_BACKGROUND, i)
                 if (i == STATIC_CONTENT) {
@@ -220,9 +217,6 @@ internal class BlurBehindDrawable(
         parentView?.invalidate()
     }
 
-    val isFullyDrawing: Boolean
-        get() = !skipDraw && wasDraw && (blurAlpha == 1f || !animateAlpha) && show && parentView!!.alpha == 1f
-
     fun checkSizes() {
         val bitmap = renderingBitmap
         if (bitmap == null || parentView!!.measuredHeight == 0 || parentView.measuredWidth == 0) {
@@ -274,10 +268,7 @@ internal class BlurBehindDrawable(
                 )
                 blurCanvas!![i]!!.save()
                 blurCanvas!![i]!!.scale(1f / DOWN_SCALE, 1f / DOWN_SCALE, 0f, 0f)
-                var backDrawable = behindView.background
-                if (backDrawable == null) {
-                    Log.e("TAGTAG", "backDrawable is null 288")
-                }
+                val backDrawable = behindView.background
                 behindView.setTag(TAG_DRAWING_AS_BACKGROUND, i)
                 if (i == STATIC_CONTENT) {
                     blurCanvas!![i]!!.translate(0f, -panTranslationY)
@@ -310,11 +301,6 @@ internal class BlurBehindDrawable(
         this.animateAlpha = animateAlpha
     }
 
-    fun onPanTranslationUpdate(y: Float) {
-        panTranslationY = y
-        parentView!!.invalidate()
-    }
-
     inner class BlurBackgroundTask : Runnable {
         var canceled = false
         var width = 0
@@ -334,7 +320,6 @@ internal class BlurBehindDrawable(
                         backgroundBitmap!![i] = null
                     }
                 }
-                val t = System.currentTimeMillis()
                 if (backgroundBitmap!![i] == null) {
                     try {
                         backgroundBitmap!![i] = Bitmap.createBitmap(bitmapWidth, h, Bitmap.Config.ARGB_8888)
@@ -343,9 +328,7 @@ internal class BlurBehindDrawable(
                             bitmapWidth / blurredBitmapTmp!![i]!!
                                 .width.toFloat(), h / blurredBitmapTmp!![i]!!.height.toFloat()
                         )
-                    } catch (e: Throwable) {
-                        Log.e("TAGTAG", e.stackTrace.toString())
-                    }
+                    } catch (e: Throwable) { }
                 }
                 if (i == 1) {
                     backgroundBitmap!![i]!!.eraseColor(Color.WHITE)
@@ -380,9 +363,6 @@ internal class BlurBehindDrawable(
     private fun runOnUIThread(runnable: Runnable) {
         parentView?.handler?.post(runnable)
     }
-
-    private fun getThemedColor(key: String): Int =
-        Color.WHITE
 
     companion object {
         const val TAG_DRAWING_AS_BACKGROUND = (1 shl 26) + 3

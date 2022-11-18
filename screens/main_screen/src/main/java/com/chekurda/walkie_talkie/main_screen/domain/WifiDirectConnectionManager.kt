@@ -95,7 +95,7 @@ internal class WifiDirectConnectionManager(
     }
 
     fun startSearchDevices() {
-        Log.e("TAGTAG", "startSearchDevices")
+        Log.d("WifiDirectConnectionManager", "startSearchDevices")
         checkNotNull(manager).discoverPeers(channel, object : ActionListener {
             override fun onSuccess() {
                 processListener?.onSearchStateChanged(isRunning = true)
@@ -107,7 +107,7 @@ internal class WifiDirectConnectionManager(
     }
 
     fun stopSearchDevices() {
-        Log.e("TAGTAG", "stopSearchDevices")
+        Log.d("WifiDirectConnectionManager", "stopSearchDevices")
         checkNotNull(manager).stopPeerDiscovery(channel, object : ActionListener {
             val callback = { processListener?.onSearchStateChanged(isRunning = false) }
             override fun onSuccess() {
@@ -121,7 +121,7 @@ internal class WifiDirectConnectionManager(
     }
 
     fun connect(device: WifiP2pDevice) {
-        Log.e("TAGTAG", "try connect address $device")
+        Log.d("WifiDirectConnectionManager", "try connect address $device")
         prepareSocketDisposable.set(null)
         connectDisposable.set(null)
         Observable.timer(CONNECTION_WAITING_TIMEOUT_SEC, TimeUnit.SECONDS)
@@ -155,7 +155,7 @@ internal class WifiDirectConnectionManager(
     }
 
     fun disconnect(isError: Boolean = false, listener : ActionListener? = null) {
-        Log.e("TAGTAG", "disconnect call")
+        Log.d("WifiDirectConnectionManager", "disconnect call")
         val callback = listener ?: object : ActionListener {
             override fun onSuccess() {
                 onDisconnected(isError)
@@ -203,18 +203,18 @@ internal class WifiDirectConnectionManager(
             var socket: Socket? = null
             try {
                 if (connectionInfo.isGroupOwner) {
-                    Log.e("TAGTAG", "ServerSocket connect")
+                    Log.d("WifiDirectConnectionManager", "ServerSocket connect")
                     serverSocket = ServerSocket(CONNECTION_PORT, BACKLOG, connectionInfo.groupOwnerAddress)
                     socket = serverSocket.accept()
                 } else {
                     // Гарантируем, что клиент будет подключаться после готовности нового ServerSocket.
                     Thread.sleep(SERVER_PREPARING_TIMEOUT_MS)
-                    Log.e("TAGTAG", "Socket connect")
+                    Log.d("WifiDirectConnectionManager", "Socket connect")
                     val address = InetSocketAddress(connectionInfo.groupOwnerAddress, CONNECTION_PORT)
                     socket = Socket().apply { connect(address, CONNECTION_TIMEOUT) }
                 }
             } catch (ex: Exception) {
-                Log.e("TAGTAG","socket exception = $ex")
+                Log.e("WifiDirectConnectionManager","socket exception = $ex")
                 socket?.close()
                 serverSocket?.close()
             }
@@ -224,13 +224,13 @@ internal class WifiDirectConnectionManager(
         }.subscribeOn(Schedulers.io())
             .observeOn(AndroidSchedulers.mainThread())
             .subscribe(::onConnected) {
-                Log.e("TAGTAG", "prepareSocket error $it")
+                Log.e("WifiDirectConnectionManager", "prepareSocket error $it")
                 disconnect(isError = true)
             }.storeIn(prepareSocketDisposable)
     }
 
     private fun onConnected(socket: Socket) {
-        Log.e("TAGTAG", "onConnected")
+        Log.d("WifiDirectConnectionManager", "onConnected")
         connectDisposable.set(null)
         isConnected = true
         val connectedDevice = connectedDevice
@@ -245,7 +245,7 @@ internal class WifiDirectConnectionManager(
     }
 
     private fun onDisconnected(isError: Boolean) {
-        Log.e("TAGTAG", "onDisconnected isError = $isError")
+        Log.d("WifiDirectConnectionManager", "onDisconnected isError = $isError")
         prepareSocketDisposable.set(null)
         isConnected = false
         isGroupConnected = false
@@ -274,7 +274,7 @@ private class WifiDirectReceiver(
             WifiP2pManager.WIFI_P2P_PEERS_CHANGED_ACTION -> listener.onPeersChanged()
             WifiP2pManager.WIFI_P2P_CONNECTION_CHANGED_ACTION -> {
                 val networkInfo: NetworkInfo? = intent.getParcelableExtra(WifiP2pManager.EXTRA_NETWORK_INFO)
-                Log.e("TAGTAG", "WIFI_P2P_CONNECTION_CHANGED_ACTION ${networkInfo?.isConnected == true}")
+                Log.d("WifiDirectReceiver", "WIFI_P2P_CONNECTION_CHANGED_ACTION ${networkInfo?.isConnected == true}")
                 listener.onConnectionChanged(networkInfo?.isConnected == true)
             }
         }
