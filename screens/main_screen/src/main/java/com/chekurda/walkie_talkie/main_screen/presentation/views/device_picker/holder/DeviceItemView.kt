@@ -37,6 +37,7 @@ internal class DeviceItemView(context: Context) : View(context) {
 
     init {
         layoutParams = ViewGroup.LayoutParams(MATCH_PARENT, WRAP_CONTENT)
+        background = ContextCompat.getDrawable(context, R.drawable.device_picker_ripple_item_background)
         updatePadding(left = dp(5), right = dp(5), top = dp(12), bottom = dp(12))
     }
 

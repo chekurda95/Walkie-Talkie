@@ -48,7 +48,7 @@ internal class DevicePickerView @JvmOverloads constructor(
             }
         }
         adapter = this@DevicePickerView.adapter
-        background = ContextCompat.getDrawable(context, R.drawable.device_picker_backround)!!
+        background = ContextCompat.getDrawable(context, R.drawable.device_picker_background)!!
         outlineProvider = ViewOutlineProvider.BACKGROUND
         clipToOutline = true
         clipToPadding = false
