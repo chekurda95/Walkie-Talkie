@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="disconnect_error">Disconnected, session was closed</string>
+    <string name="permissions_error">No permissions</string>
+    <string name="try_connection_error">Connection failed, please try again\n(*Here mem with Loki)</string>
+    <string name="other_error_message">Something went wrong somewhere</string>
+</resources>

@@ -29,7 +29,7 @@ internal class ConnectionInfoView @JvmOverloads constructor(
 
     private val waveformHeight = dp(WAVEFORM_HEIGHT_DP)
     private val connectedText = "Connected"
-    private val notConnectedText = "Not connected"
+    private val notConnectedText = "No connection"
 
     private val deviceNameLayout = TextLayout {
         paint.apply {

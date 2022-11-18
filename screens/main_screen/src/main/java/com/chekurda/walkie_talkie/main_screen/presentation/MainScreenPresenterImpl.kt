@@ -2,7 +2,9 @@ package com.chekurda.walkie_talkie.main_screen.presentation
 
 import android.net.wifi.p2p.WifiP2pDevice
 import android.util.Log
+import androidx.annotation.StringRes
 import com.chekurda.common.base_fragment.BasePresenterImpl
+import com.chekurda.walkie_talkie.main_screen.R
 import com.chekurda.walkie_talkie.main_screen.data.DeviceInfo
 import com.chekurda.walkie_talkie.main_screen.data.deviceInfo
 import com.chekurda.walkie_talkie.main_screen.domain.AudioStreamer
@@ -17,6 +19,7 @@ internal class MainScreenPresenterImpl(
 
     private var deviceInfoList: List<DeviceInfo> = emptyList()
     private var isConnected: Boolean = false
+    private var isWaitingConnection: Boolean = false
     private var hasPermissions: Boolean = false
 
     init {
@@ -53,10 +56,15 @@ internal class MainScreenPresenterImpl(
     }
 
     override fun onConnectClicked() {
-        view?.changeDeviceListVisibility(isVisible = true)
+        if (hasPermissions) {
+            view?.changeDeviceListVisibility(isVisible = true)
+        } else {
+            view?.showError(getErrorMessage())
+        }
     }
 
     override fun onDeviceItemClicked(deviceInfo: DeviceInfo) {
+        isWaitingConnection = true
         wifiDirectManager.connect(
             WifiP2pDevice().apply {
                 deviceAddress = deviceInfo.address
@@ -99,7 +107,8 @@ internal class MainScreenPresenterImpl(
     }
 
     override fun onConnectionSuccess(device: WifiP2pDevice) {
-        this.isConnected = true
+        isConnected = true
+        isWaitingConnection = false
         view?.changeDeviceListVisibility(isVisible = false)
         view?.showConnectedState(device.deviceInfo)
         wifiDirectManager.stopSearchDevices()
@@ -107,10 +116,12 @@ internal class MainScreenPresenterImpl(
 
     override fun onConnectionCanceled(isError: Boolean) {
         if (isError) {
-            view?.showConnectionError()
+            view?.showError(getErrorMessage())
         } else {
             view?.onDisconnected()
         }
+        isConnected = false
+        isWaitingConnection = false
         wifiDirectManager.startSearchDevices()
     }
 
@@ -120,6 +131,14 @@ internal class MainScreenPresenterImpl(
 
     override fun onOutputAmplitudeChanged(amplitude: Float) {
         view?.onOutputAmplitudeChanged(amplitude)
+    }
+
+    @StringRes
+    private fun getErrorMessage(): Int = when {
+        isConnected -> R.string.disconnect_error
+        !hasPermissions -> R.string.permissions_error
+        isWaitingConnection -> R.string.try_connection_error
+        else -> R.string.other_error_message
     }
 
     override fun onDestroy() {

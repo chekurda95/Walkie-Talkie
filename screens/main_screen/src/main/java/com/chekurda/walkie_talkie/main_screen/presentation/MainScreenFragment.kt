@@ -7,6 +7,7 @@ import android.content.Context
 import android.os.Bundle
 import android.view.MotionEvent
 import android.view.View
+import android.widget.Toast
 import androidx.activity.OnBackPressedCallback
 import androidx.fragment.app.Fragment
 import androidx.recyclerview.widget.RecyclerView
@@ -145,7 +146,8 @@ internal class MainScreenFragment : BasePresenterFragment<MainScreenContract.Vie
         )
     }
 
-    override fun showConnectionError() {
+    override fun showError(errorMessage: Int) {
+        Toast.makeText(context, errorMessage, Toast.LENGTH_LONG).show()
         clearState()
     }
 

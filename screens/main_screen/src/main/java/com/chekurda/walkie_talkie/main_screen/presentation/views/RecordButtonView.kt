@@ -44,7 +44,7 @@ internal class RecordButtonView @JvmOverloads constructor(
             textSize = dp(20).toFloat()
             color = Color.WHITE
         }
-        text = "Press".uppercase()
+        text = "Push".uppercase()
         alignment = Layout.Alignment.ALIGN_CENTER
         includeFontPad = false
     }

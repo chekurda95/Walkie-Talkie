@@ -1,6 +1,7 @@
 package com.chekurda.walkie_talkie.main_screen.presentation
 
 import android.app.Activity
+import androidx.annotation.StringRes
 import com.chekurda.common.base_fragment.BasePresenter
 import com.chekurda.walkie_talkie.main_screen.data.DeviceInfo
 import com.chekurda.walkie_talkie.main_screen.domain.AudioStreamer
@@ -14,7 +15,7 @@ internal interface MainScreenContract {
         fun changeSearchState(isRunning: Boolean)
         fun showConnectionWaiting()
         fun showConnectedState(connectedDevice: DeviceInfo)
-        fun showConnectionError()
+        fun showError(@StringRes errorMessage: Int)
         fun onDisconnected()
         fun provideActivity(): Activity
     }
