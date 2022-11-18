@@ -7,6 +7,9 @@ import com.chekurda.common.plugin_struct.FeatureWrapper
 import com.chekurda.walkie_talkie.main_screen.contact.MainScreenFragmentFactory
 import com.chekurda.walkie_talkie.main_screen.presentation.MainScreenFragment
 
+/**
+ * Плагин главного экрана.
+ */
 object MainScreenPlugin : BasePlugin<Unit>() {
 
     override val api: Set<FeatureWrapper<out Feature>> = setOf(

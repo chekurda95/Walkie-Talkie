@@ -13,7 +13,6 @@ import android.view.View
 import android.widget.Toast
 import androidx.activity.OnBackPressedCallback
 import androidx.fragment.app.Fragment
-import androidx.recyclerview.widget.RecyclerView
 import com.chekurda.common.base_fragment.BasePresenterFragment
 import com.chekurda.walkie_talkie.main_screen.R
 import com.chekurda.walkie_talkie.main_screen.contact.MainScreenFragmentFactory
@@ -29,6 +28,9 @@ import com.chekurda.walkie_talkie.main_screen.presentation.views.device_picker.D
 import com.chekurda.walkie_talkie.main_screen.utils.PermissionsHelper
 import com.chekurda.walkie_talkie.main_screen.utils.RecordingDeviceHelper
 
+/**
+ * Фрагмент главного экрана.
+ */
 internal class MainScreenFragment : BasePresenterFragment<MainScreenContract.View, MainScreenContract.Presenter>(),
     MainScreenContract.View {
 
@@ -80,13 +82,13 @@ internal class MainScreenFragment : BasePresenterFragment<MainScreenContract.Vie
                 when (event.action) {
                     MotionEvent.ACTION_DOWN -> {
                         view.isPressed = true
-                        presenter.onVoiceButtonStateChanged(isPressed = true)
+                        presenter.onRecordButtonStateChanged(isPressed = true)
                     }
                     MotionEvent.ACTION_CANCEL,
                     MotionEvent.ACTION_UP -> {
                         view.isPressed = false
                         recordButton?.animateAmplitudeCancel()
-                        presenter.onVoiceButtonStateChanged(isPressed = false)
+                        presenter.onRecordButtonStateChanged(isPressed = false)
                     }
                 }
                 true
@@ -123,7 +125,7 @@ internal class MainScreenFragment : BasePresenterFragment<MainScreenContract.Vie
         wifiManager = null
     }
 
-    override fun changeDeviceListVisibility(isVisible: Boolean) {
+    override fun changeDevicePickerVisibility(isVisible: Boolean) {
         devicePicker?.apply {
             if (isVisible) show()
             else hide()

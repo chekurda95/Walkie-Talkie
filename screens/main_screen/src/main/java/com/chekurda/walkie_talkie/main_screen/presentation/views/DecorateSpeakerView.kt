@@ -12,6 +12,9 @@ import com.chekurda.design.custom_view_tools.utils.SimplePaint
 import com.chekurda.design.custom_view_tools.utils.dp
 import kotlin.math.roundToInt
 
+/**
+ * Декоративный view элемент для отображения динамика рации.
+ */
 internal class DecorateSpeakerView @JvmOverloads constructor(
     context: Context,
     attrs: AttributeSet? = null

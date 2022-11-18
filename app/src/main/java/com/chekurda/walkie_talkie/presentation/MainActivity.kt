@@ -5,6 +5,9 @@ import androidx.appcompat.app.AppCompatActivity
 import com.chekurda.walkie_talkie.AppPlugin
 import com.chekurda.walkie_talkie.R
 
+/**
+ * Activity главного экрана.
+ */
 class MainActivity : AppCompatActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {

@@ -20,6 +20,9 @@ import com.chekurda.walkie_talkie.main_screen.R
 import com.chekurda.walkie_talkie.main_screen.data.DeviceInfo
 import kotlin.math.roundToInt
 
+/**
+ * View ячейки списка девасов для подключения.
+ */
 internal class DeviceItemView(context: Context) : View(context) {
 
     private val deviceNameLayout = TextLayout {

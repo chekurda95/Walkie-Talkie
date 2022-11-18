@@ -61,7 +61,7 @@ internal class MainScreenPresenterImpl(
             wifiDirectManager.startSearchDevices()
             hasPermissions = true
         }
-        view?.changeDeviceListVisibility(isVisible = true)
+        view?.changeDevicePickerVisibility(isVisible = true)
     }
 
     override fun onDeviceItemClicked(deviceInfo: DeviceInfo) {
@@ -72,7 +72,7 @@ internal class MainScreenPresenterImpl(
                 deviceName = deviceInfo.name
             }
         )
-        view?.changeDeviceListVisibility(isVisible = false)
+        view?.changeDevicePickerVisibility(isVisible = false)
     }
 
     override fun onWaitingConnection() {
@@ -90,7 +90,7 @@ internal class MainScreenPresenterImpl(
         if (!isConnected) wifiDirectManager.startSearchDevices()
     }
 
-    override fun onVoiceButtonStateChanged(isPressed: Boolean) {
+    override fun onRecordButtonStateChanged(isPressed: Boolean) {
         wifiDirectManager.changeSteamDirection(isListening = !isPressed)
     }
 
@@ -110,7 +110,7 @@ internal class MainScreenPresenterImpl(
     override fun onConnectionSuccess(device: WifiP2pDevice) {
         isConnected = true
         isWaitingConnection = false
-        view?.changeDeviceListVisibility(isVisible = false)
+        view?.changeDevicePickerVisibility(isVisible = false)
         view?.showConnectedState(device.deviceInfo)
         wifiDirectManager.stopSearchDevices()
     }

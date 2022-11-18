@@ -3,6 +3,9 @@ package com.chekurda.walkie_talkie
 import com.chekurda.common.plugin_struct.*
 import com.chekurda.walkie_talkie.main_screen.contact.MainScreenFragmentFactory
 
+/**
+ * Плагин приложения.
+ */
 object AppPlugin : BasePlugin<Unit>() {
 
     private lateinit var mainScreenFactoryFeature: FeatureProvider<MainScreenFragmentFactory>

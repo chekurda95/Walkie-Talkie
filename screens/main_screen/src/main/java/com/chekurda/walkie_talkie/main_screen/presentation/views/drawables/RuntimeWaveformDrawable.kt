@@ -15,6 +15,9 @@ import com.chekurda.design.custom_view_tools.utils.update
 import java.util.LinkedList
 import kotlin.math.roundToInt
 
+/**
+ * Осциллограмма входящего звука.
+ */
 internal class RuntimeWaveformDrawable(private val view: View) : Drawable() {
 
     private val paint = SimplePaint {

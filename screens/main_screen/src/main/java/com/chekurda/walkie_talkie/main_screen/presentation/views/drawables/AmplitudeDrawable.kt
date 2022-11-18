@@ -1,13 +1,11 @@
 package com.chekurda.walkie_talkie.main_screen.presentation.views.drawables
 
-import android.animation.ValueAnimator
 import android.graphics.Canvas
 import android.graphics.ColorFilter
 import android.graphics.Paint
 import android.graphics.PixelFormat
 import android.graphics.drawable.Drawable
 import android.view.animation.AccelerateDecelerateInterpolator
-import android.view.animation.AccelerateInterpolator
 import androidx.annotation.ColorInt
 import androidx.annotation.FloatRange
 import androidx.annotation.Px

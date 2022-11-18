@@ -14,6 +14,9 @@ import com.chekurda.design.custom_view_tools.utils.dp
 import com.chekurda.walkie_talkie.main_screen.data.DeviceInfo
 import com.chekurda.walkie_talkie.main_screen.presentation.views.device_picker.holder.DeviceViewHolder
 
+/**
+ * Адаптер списка выбора девайсов.
+ */
 internal class DeviceListAdapter(
     private val itemActionListener: DeviceViewHolder.ActionListener
 ) : RecyclerView.Adapter<RecyclerView.ViewHolder>() {

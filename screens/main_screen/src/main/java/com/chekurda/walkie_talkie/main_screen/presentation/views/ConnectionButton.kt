@@ -18,6 +18,9 @@ import com.chekurda.design.custom_view_tools.utils.safeRequestLayout
 import com.chekurda.walkie_talkie.main_screen.R
 import com.chekurda.walkie_talkie.main_screen.presentation.views.drawables.AnimatedDotsDrawable
 
+/**
+ * Кнопка подключения.
+ */
 internal class ConnectionButton @JvmOverloads constructor(
     context: Context,
     attrs: AttributeSet? = null

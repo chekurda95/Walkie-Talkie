@@ -16,6 +16,9 @@ import kotlin.math.abs
 import kotlin.math.max
 import kotlin.math.min
 
+/**
+ * Drawable для блюра.
+ */
 internal class BlurBehindDrawable(
     private val parentView: View? = null,
     private val behindViewProvider: () -> View

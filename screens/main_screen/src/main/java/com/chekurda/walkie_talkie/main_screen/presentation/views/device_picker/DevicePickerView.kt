@@ -26,6 +26,9 @@ import com.chekurda.walkie_talkie.main_screen.data.DeviceInfo
 import com.chekurda.walkie_talkie.main_screen.presentation.views.device_picker.holder.DeviceViewHolder
 import com.chekurda.walkie_talkie.main_screen.presentation.views.drawables.BlurBehindDrawable
 
+/**
+ * View выбора девайса для подключения.
+ */
 internal class DevicePickerView @JvmOverloads constructor(
     context: Context,
     attrs: AttributeSet? = null
