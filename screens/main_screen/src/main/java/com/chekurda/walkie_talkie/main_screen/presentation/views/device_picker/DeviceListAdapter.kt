@@ -73,7 +73,7 @@ private class ProgressItemView(context: Context): FrameLayout(context) {
 
     init {
         layoutParams = ViewGroup.LayoutParams(MATCH_PARENT, WRAP_CONTENT)
-        addView(ProgressBar(context), LayoutParams(dp(25), dp(25), Gravity.CENTER))
+        addView(ProgressBar(context), LayoutParams(dp(30), dp(30), Gravity.CENTER))
         updatePadding(top = dp(10), bottom = dp(10))
     }
 }

@@ -29,7 +29,7 @@ internal class DeviceItemView(context: Context) : View(context) {
 
     private val dividerPaint = SimpleTextPaint {
         color = Color.BLACK
-        alpha = (PAINT_MAX_ALPHA * 0.15).roundToInt()
+        alpha = (PAINT_MAX_ALPHA * 0.4).roundToInt()
         strokeWidth = dp(1).toFloat()
     }
 
