@@ -35,7 +35,7 @@ internal class DeviceItemView(context: Context) : View(context) {
 
     init {
         layoutParams = ViewGroup.LayoutParams(MATCH_PARENT, WRAP_CONTENT)
-        updatePadding(left = dp(12), right = dp(12))
+        updatePadding(left = dp(5), right = dp(5), top = dp(12), bottom = dp(12))
     }
 
     fun setData(data: DeviceInfo) {
@@ -54,16 +54,16 @@ internal class DeviceItemView(context: Context) : View(context) {
         super.getSuggestedMinimumWidth().coerceAtLeast(deviceNameLayout.width)
 
     override fun getSuggestedMinimumHeight(): Int =
-        super.getSuggestedMinimumHeight().coerceAtLeast(dp(VIEW_HEIGHT_DP))
+        super.getSuggestedMinimumHeight().coerceAtLeast(deviceNameLayout.height + paddingTop + paddingBottom)
 
     override fun onSizeChanged(w: Int, h: Int, oldw: Int, oldh: Int) {
         super.onSizeChanged(w, h, oldw, oldh)
-        deviceNameLayout.configure { layoutWidth = w - paddingStart - paddingEnd }
+        deviceNameLayout.configure { maxWidth = w - paddingStart - paddingEnd }
     }
 
     override fun onLayout(changed: Boolean, left: Int, top: Int, right: Int, bottom: Int) {
         deviceNameLayout.layout(
-            paddingStart,
+            paddingStart + (measuredWidth - paddingStart - paddingEnd - deviceNameLayout.width).half,
             paddingTop + (measuredHeight - paddingTop - paddingBottom - deviceNameLayout.height).half
         )
     }
@@ -74,5 +74,4 @@ internal class DeviceItemView(context: Context) : View(context) {
     }
 }
 
-private const val VIEW_HEIGHT_DP = 40
-private const val TEXT_SIZE_DP = 17
+private const val TEXT_SIZE_DP = 24
