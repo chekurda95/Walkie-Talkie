@@ -9,7 +9,7 @@ class MainActivity : AppCompatActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        setContentView(R.layout.activity_fullscreen)
+        setContentView(R.layout.main_screen_activity)
 
         if (savedInstanceState == null) {
             supportFragmentManager.beginTransaction()
