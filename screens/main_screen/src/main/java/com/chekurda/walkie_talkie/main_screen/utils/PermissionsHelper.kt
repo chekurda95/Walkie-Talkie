@@ -18,13 +18,6 @@ internal class PermissionsHelper(
 ) {
 
     /**
-     * Запрос разрешений [permissions].
-     */
-    fun request() {
-        ActivityCompat.requestPermissions(activity, permissions, requestCode)
-    }
-
-    /**
      * Выполнить действие [action], если имеются указанные разрешения [permissions],
      * если разрешений нет, то произойдет запрос по коду [requestCode].
      */

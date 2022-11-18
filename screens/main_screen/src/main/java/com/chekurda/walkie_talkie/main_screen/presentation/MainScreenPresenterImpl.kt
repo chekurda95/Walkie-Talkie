@@ -56,11 +56,12 @@ internal class MainScreenPresenterImpl(
     }
 
     override fun onConnectClicked() {
-        if (hasPermissions) {
-            view?.changeDeviceListVisibility(isVisible = true)
-        } else {
-            view?.showError(getErrorMessage())
+        if (!hasPermissions) {
+            wifiDirectManager.registerDirectListener(view!!.provideActivity())
+            wifiDirectManager.startSearchDevices()
+            hasPermissions = true
         }
+        view?.changeDeviceListVisibility(isVisible = true)
     }
 
     override fun onDeviceItemClicked(deviceInfo: DeviceInfo) {

@@ -65,7 +65,9 @@ internal class MainScreenFragment : BasePresenterFragment<MainScreenContract.Vie
         connectionButton = view.findViewById<ConnectionButton>(R.id.connect_button).apply {
             setOnClickListener {
                 when (connectionButton!!.buttonState) {
-                    ButtonState.CONNECT_SUGGESTION -> presenter.onConnectClicked()
+                    ButtonState.CONNECT_SUGGESTION -> {
+                        permissionsHelper?.withPermissions { presenter.onConnectClicked() }
+                    }
                     ButtonState.DISCONNECT_SUGGESTION,
                     ButtonState.WAITING_CONNECTION -> presenter.onDisconnectClicked()
                 }
