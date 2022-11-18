@@ -5,16 +5,16 @@ import android.graphics.Canvas
 import android.graphics.Color
 import android.graphics.Typeface
 import android.graphics.drawable.Drawable
-import android.text.TextUtils
 import android.util.AttributeSet
 import android.view.View
+import androidx.annotation.FloatRange
 import androidx.core.view.updatePadding
 import com.chekurda.common.half
 import com.chekurda.design.custom_view_tools.TextLayout
 import com.chekurda.design.custom_view_tools.utils.MeasureSpecUtils.measureDirection
 import com.chekurda.design.custom_view_tools.utils.dp
 import com.chekurda.design.custom_view_tools.utils.safeRequestLayout
-import com.chekurda.walkie_talkie.main_screen.presentation.views.drawables.WaveformDrawable
+import com.chekurda.walkie_talkie.main_screen.presentation.views.drawables.RuntimeWaveformDrawable
 import org.apache.commons.lang3.StringUtils
 
 internal class ConnectionInfoView @JvmOverloads constructor(
@@ -47,7 +47,7 @@ internal class ConnectionInfoView @JvmOverloads constructor(
         }
         text = notConnectedText
     }
-    private val waveformDrawable = WaveformDrawable().apply {
+    private val waveformDrawable = RuntimeWaveformDrawable(this).apply {
         callback = this@ConnectionInfoView
     }
 
@@ -60,6 +60,13 @@ internal class ConnectionInfoView @JvmOverloads constructor(
                 deviceNameLayout.configure { text = value.deviceName }
                 safeRequestLayout()
             }
+        }
+
+    @get:FloatRange(from = 0.0, to = 1.0)
+    var inputAmplitude: Float
+        get() = waveformDrawable.amplitude
+        set(value) {
+            waveformDrawable.amplitude = value
         }
 
     init {

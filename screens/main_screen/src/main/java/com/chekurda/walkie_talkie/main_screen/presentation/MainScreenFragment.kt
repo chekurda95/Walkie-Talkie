@@ -160,7 +160,7 @@ internal class MainScreenFragment : BasePresenterFragment<MainScreenContract.Vie
     }
 
     override fun onInputAmplitudeChanged(amplitude: Float) {
-        view?.post {  }
+        view?.post { connectionInfoView?.inputAmplitude = amplitude }
     }
 
     override fun onOutputAmplitudeChanged(amplitude: Float) {

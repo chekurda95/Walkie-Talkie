@@ -105,12 +105,21 @@ internal class AudioStreamer {
                 val byteArray = ByteArray(minBufferSize)
                 kotlin.runCatching {
                     val inputStream = socket.getInputStream()
+                    var lastAmplitude = 0f
                     while (isConnected) {
-                        if (inputStream.available() == 0) continue
-                        if (isListening) {
+                        if (inputStream.available() == 0 || !isListening) {
+                            if (lastAmplitude != 0f) {
+                                lastAmplitude = 0f
+                                amplitudeListener?.onInputAmplitudeChanged(0f)
+                            }
+                        } else {
                             inputStream.read(byteArray)
                             track?.write(byteArray, 0, byteArray.size)
-                            amplitudeListener?.onInputAmplitudeChanged(getAmplitude(byteArray, byteArray.size))
+                            val amplitude = getAmplitude(byteArray, byteArray.size)
+                            if (lastAmplitude != amplitude) {
+                                lastAmplitude = amplitude
+                                amplitudeListener?.onInputAmplitudeChanged(amplitude)
+                            }
                         }
                     }
                 }.apply {
@@ -131,11 +140,16 @@ internal class AudioStreamer {
                 val byteArray = ByteArray(minBufferSize)
                 kotlin.runCatching {
                     val outputStream = socket.getOutputStream()
+                    var lastAmplitude = 0f
                     while (isConnected) {
                         if (!isListening) {
                             recorder!!.read(byteArray, 0, byteArray.size)
                             outputStream.write(byteArray)
-                            amplitudeListener?.onOutputAmplitudeChanged(getAmplitude(byteArray, byteArray.size))
+                            val amplitude = getAmplitude(byteArray, byteArray.size)
+                            if (lastAmplitude != amplitude) {
+                                lastAmplitude = amplitude
+                                amplitudeListener?.onOutputAmplitudeChanged(amplitude)
+                            }
                         }
                     }
                 }.apply {
